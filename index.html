@@ -6,15 +6,15 @@
   <meta name="theme-color" content="#c01820">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=17">
-  <title>Schäfchen · VDE Prüfungen</title>
+  <link rel="stylesheet" href="style.css?v=18">
+  <title>VDE Prüfprotokoll</title>
 </head>
 <body>
 <header class="appHeader">
   <img src="logo.png" alt="Schaaf-Elektro Logo" class="appLogo">
   <div class="headerCopy">
-    <h1>Schäfchen · VDE Prüfungen</h1>
-    <p>Schaaf-Elektro GmbH · DIN VDE 0100-600 / DIN VDE 0105-100 / DGUV V3</p>
+    <h1>VDE Prüfprotokoll</h1>
+    <p>DIN VDE 0100-600 / DIN VDE 0105-100 / DGUV V3</p>
   </div>
   <div id="storagePill" class="storagePill"><span></span> Lokal auf diesem Gerät</div>
 </header>
@@ -72,8 +72,18 @@
     <div id="saveState" class="saveState">Gespeichert</div>
   </section>
 
-  <section class="card">
-    <div class="titleRow"><h2>⚙️ Einstellungen / Firmendaten</h2><button class="secondary" onclick="toggleSettings()">Ein-/ausklappen</button></div>
+  <nav class="protocolStepper" aria-label="Prüfabschnitte">
+    <button type="button" class="active" data-step-target="1" onclick="showStep(1)"><span>1</span><b>Auftrag</b></button>
+    <button type="button" data-step-target="2" onclick="showStep(2)"><span>2</span><b>Sichtprüfung</b></button>
+    <button type="button" data-step-target="3" onclick="showStep(3)"><span>3</span><b>Einspeisung</b></button>
+    <button type="button" data-step-target="4" onclick="showStep(4)"><span>4</span><b>Verteilungen</b></button>
+    <button type="button" data-step-target="5" onclick="showStep(5)"><span>5</span><b>Abschluss</b></button>
+  </nav>
+
+  <div id="stepIntro" class="stepIntro"><div><span id="stepCounter">Schritt 1 von 5</span><h2 id="stepTitle">Auftrag und Prüfdaten</h2><p id="stepDescription">Grunddaten zur Baustelle, Prüfart und zum verwendeten Prüfgerät.</p></div><div id="stepProgress">0 % ausgefüllt</div></div>
+
+  <details class="card settingsCard">
+    <summary><span>⚙️ Firmendaten und Logo</span><small>Nur öffnen, wenn sich Stammdaten geändert haben</small></summary>
     <div id="settingsPanel">
       <p class="hint">Diese Daten werden lokal gespeichert und im PDF automatisch in der Fußzeile jeder Seite ausgegeben.</p>
       <div class="grid">
@@ -91,10 +101,10 @@
       </div>
       <div id="logoPreview" class="logoPreview fixedLogo"><img src="logo.png" alt="Schaaf-Elektro Logo"><span>Fest hinterlegtes Firmenlogo</span></div>
     </div>
-  </section>
+  </details>
 
-  <section class="card">
-    <h2>Allgemeine Angaben</h2>
+  <section class="card protocolStep active" data-step="1">
+    <div class="protocolSectionHead"><span>1.1</span><div><h2>Auftrag und Objekt</h2><p>Die Baustellendaten sind bereits übernommen und können hier ergänzt werden.</p></div></div>
     <div class="grid">
       <label>Auftraggeber<input id="kunde"></label>
       <label>Objekt / Anlage<input id="objekt"></label>
@@ -106,19 +116,30 @@
       <label>Nennspannung<input id="spannung" value="230/400 V"></label>
     </div>
     <div class="checks">
-      <label><input type="checkbox" id="erst"> Erstprüfung</label>
-      <label><input type="checkbox" id="wieder"> Wiederholungsprüfung</label>
-      <label><input type="checkbox" id="aenderung"> Änderung/Erweiterung</label>
+      <label><input type="radio" name="pruefart" id="erst"> Erstprüfung</label>
+      <label><input type="radio" name="pruefart" id="wieder"> Wiederholungsprüfung</label>
+      <label><input type="radio" name="pruefart" id="aenderung"> Änderung/Erweiterung</label>
     </div>
   </section>
 
-  <section class="card">
-    <h2>Besichtigen & Erproben</h2>
+  <section class="card protocolStep" data-step="1">
+    <div class="protocolSectionHead"><span>1.2</span><div><h2>Prüfgerät</h2><p>Gerätedaten für die Rückverfolgbarkeit der Messung.</p></div></div>
+    <div class="grid">
+      <label>Hersteller<input id="gHersteller"></label>
+      <label>Typ<input id="gTyp"></label>
+      <label>Seriennummer<input id="gSerie"></label>
+      <label>Kalibrierung gültig bis<input id="gKal" type="date"></label>
+    </div>
+  </section>
+
+  <section class="card protocolStep" data-step="2">
+    <div class="protocolSectionHead"><span>2</span><div><h2>Besichtigen und Erproben</h2><p>Jeden Prüfpunkt mit i.O. oder n.i.O. bewerten.</p></div></div>
     <div id="checks"></div>
   </section>
 
-  <section class="card hakCard">
+  <section class="card hakCard protocolStep" data-step="3">
     <div class="titleRow sectionHead"><button class="collapseBtn" onclick="toggleHak(this)">▾</button><h2>Hausanschlusskasten / Einspeisung</h2></div>
+    <p class="hint">Zuleitung und Absicherung der Anlage. Falls nicht Bestandteil der Prüfung, können die Felder leer bleiben.</p>
     <div id="hakBody" class="grid">
       <label>Bezeichnung<input id="hakName" value="Hausanschlusskasten" placeholder="z.B. HAK / Zählerschrank"></label>
       <label>Ort<input id="hakPlace" placeholder="z.B. Keller, HAR"></label>
@@ -130,52 +151,48 @@
     </div>
   </section>
 
-  <section class="card">
-    <div class="titleRow"><h2>Messstruktur</h2><button onclick="addUv()">+ UV</button></div>
-    <p class="hint">Aufbau: Unterverteilung → optional FI/RCD → Sicherungen/Stromkreise. Stromkreise können auch ohne FI direkt in der UV angelegt werden.</p>
+  <section class="card protocolStep" data-step="4">
+    <div class="titleRow"><div class="protocolSectionHead compact"><span>4</span><div><h2>Verteilungen und Stromkreise</h2><p>Aufbau in der tatsächlichen Reihenfolge des Verteilers.</p></div></div><button onclick="addUv()">+ Verteilung hinzufügen</button></div>
+    <div class="structureGuide"><span>Verteilung</span><i>→</i><span>FI/RCD</span><i>→</i><span>Stromkreis</span></div>
     <div id="uvs"></div>
   </section>
 
-  <section class="card summary">
-    <h2>Automatische Gesamtbewertung</h2>
+  <section class="card summary protocolStep" data-step="5">
+    <div class="protocolSectionHead"><span>5.1</span><div><h2>Automatische Gesamtbewertung</h2><p>Fehlende oder auffällige Messwerte werden zusammengefasst.</p></div></div>
     <div id="overall" class="overall neutral">Noch keine Bewertung</div>
     <ul id="overallList"></ul>
   </section>
 
-  <section class="card">
-    <h2>Prüfgerät</h2>
-    <div class="grid">
-      <label>Hersteller<input id="gHersteller"></label>
-      <label>Typ<input id="gTyp"></label>
-      <label>Seriennummer<input id="gSerie"></label>
-      <label>Kalibrierung gültig bis<input id="gKal" type="date"></label>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>Mängel / Hinweise</h2>
+  <section class="card protocolStep" data-step="5">
+    <div class="protocolSectionHead"><span>5.2</span><div><h2>Mängel, Hinweise und Fotos</h2><p>Festgestellte Mängel nachvollziehbar dokumentieren.</p></div></div>
     <textarea id="maengel" placeholder="Mängel, Hinweise, Nacharbeiten..."></textarea>
     <label class="photo">Fotos hinzufügen<input id="fotos" type="file" accept="image/*" multiple></label>
     <div id="preview"></div>
   </section>
 
-  <section class="card">
-    <h2>Unterschrift Prüfer</h2>
+  <section class="card protocolStep" data-step="5">
+    <div class="protocolSectionHead"><span>5.3</span><div><h2>Unterschrift Prüfer</h2><p>Direkt auf dem Gerät unterschreiben.</p></div></div>
     <canvas id="sig" width="700" height="220"></canvas>
     <button onclick="clearSig()">Unterschrift löschen</button>
   </section>
 
-  <section class="card result">
-    <h2>Ergebnis</h2>
+  <section class="card result protocolStep" data-step="5">
+    <div class="protocolSectionHead"><span>5.4</span><div><h2>Ergebnis und Fertigstellung</h2><p>Fachliche Schlussbewertung festlegen und Protokoll abschließen.</p></div></div>
     <select id="ergebnis"><option>Anlage ist in Ordnung</option><option>Anlage ist mit Mängeln betriebsbereit</option><option>Anlage ist nicht betriebsbereit</option></select>
     <label>Nächste Prüfung empfohlen bis<input id="next" type="date"></label>
   </section>
 
-  <div class="actions">
+  <div class="actions protocolStep" data-step="5">
     <button onclick="saveData(true)">Jetzt speichern</button>
     <button onclick="preparePrint();window.print()">PDF / Drucken</button>
     <button class="danger" onclick="resetData()">Prüfung löschen</button>
   </div>
+
+  <nav class="stepActions">
+    <button id="prevStep" type="button" class="secondary" onclick="changeStep(-1)">← Zurück</button>
+    <span>Änderungen werden automatisch gespeichert</span>
+    <button id="nextStep" type="button" onclick="changeStep(1)">Weiter →</button>
+  </nav>
 </main>
 <!-- Kabeltypen werden jetzt als Auswahlfeld verwendet. -->
 
@@ -209,6 +226,6 @@
 </dialog>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="script.js?v=17"></script>
+<script src="script.js?v=18"></script>
 </body>
 </html>
