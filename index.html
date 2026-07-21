@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#c01820">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=16">
+  <link rel="stylesheet" href="style.css?v=17">
   <title>Schäfchen · VDE Prüfungen</title>
 </head>
 <body>
@@ -33,10 +33,13 @@
     <div class="workspaceToolbar">
       <div id="workspaceStats" class="workspaceStats"></div>
       <label class="searchField"><span>Baustelle suchen</span><input id="siteSearch" type="search" placeholder="Name, Kunde, Adresse …"></label>
-      <div class="toolbarButtons">
-        <button class="secondary" onclick="exportBackup()">Sicherung exportieren</button>
-        <button class="secondary" onclick="document.getElementById('backupImport').click()">Sicherung importieren</button>
-        <input id="backupImport" type="file" accept="application/json,.json" hidden>
+      <div class="backupTools">
+        <p><b>Datensicherung</b><span>Für Gerätewechsel oder falls Browserdaten gelöscht werden.</span></p>
+        <div class="toolbarButtons">
+          <button class="secondary" onclick="exportBackup()">Alle Daten sichern</button>
+          <button class="secondary" onclick="document.getElementById('backupImport').click()">Sicherung wiederherstellen</button>
+          <input id="backupImport" type="file" accept="application/json,.json" hidden>
+        </div>
       </div>
     </div>
     <div id="siteGrid" class="siteGrid"></div>
@@ -62,8 +65,8 @@
   <section class="editorBar">
     <button class="secondary backButton" onclick="closeEditor()">← Baustellenordner</button>
     <div class="editorIdentity">
-      <span id="editorSiteName"></span>
-      <input id="protocolTitle" aria-label="Name der Prüfung" placeholder="Name der Prüfung">
+      <span><b id="editorSiteName"></b> · Prüfprotokoll</span>
+      <input id="protocolTitle" aria-label="Bezeichnung der Prüfung" placeholder="z. B. Erstprüfung · UV EG">
     </div>
     <label class="statusSelect">Status<select id="protocolStatus"><option value="draft">Entwurf</option><option value="completed">Abgeschlossen</option></select></label>
     <div id="saveState" class="saveState">Gespeichert</div>
@@ -197,7 +200,7 @@
   <form id="protocolForm" method="dialog">
     <div class="dialogHead"><div><div class="eyebrow">Neue Datei im Baustellenordner</div><h2>Prüfung anlegen</h2></div><button type="button" class="iconButton secondary" onclick="closeProtocolDialog()" aria-label="Schließen">×</button></div>
     <div class="grid">
-      <label>Name der Prüfung *<input id="newProtocolTitle" required placeholder="z. B. Erstprüfung UV EG"></label>
+      <label>Geprüfte Anlage / Verteilung *<input id="newProtocolTitle" required placeholder="z. B. UV EG, Hauptverteilung oder Wohnung 3"><small>Die App erstellt daraus automatisch eine Bezeichnung wie „Erstprüfung · UV EG“.</small></label>
       <label>Prüfdatum<input id="newProtocolDate" type="date"></label>
       <label>Prüfart<select id="newProtocolType"><option value="erst">Erstprüfung</option><option value="wieder">Wiederholungsprüfung</option><option value="aenderung">Änderung / Erweiterung</option></select></label>
     </div>
@@ -206,6 +209,6 @@
 </dialog>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="script.js?v=16"></script>
+<script src="script.js?v=17"></script>
 </body>
 </html>
