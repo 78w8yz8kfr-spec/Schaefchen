@@ -1,7 +1,7 @@
 const LEGACY_STORAGE='vde-protokoll-v15-sichtbarkeit-reihenfolge';
 const DB_NAME='schaefchen-vde-local';
 const DB_VERSION=1;
-const APP_VERSION=16;
+const APP_VERSION=17;
 const logoData='logo.png';
 const fields=['kunde','objekt','adresse','datum','pruefer','firma','netzform','spannung','erst','wieder','aenderung','gHersteller','gTyp','gSerie','gKal','maengel','ergebnis','next','firmName','firmStreet','firmCity','firmTel','firmFax','firmMobile','firmEmail','firmCEO','firmCourt','firmHRB','defaultPruefer','hakName','hakPlace','hakFuse','hakSource','hakCable','hakCableCustom','hakCores','hakCross'];
 const checkItems=['Schutz gegen elektrischen Schlag vorhanden','Schutzleiter und Potentialausgleich vorhanden','Leitungen/Betriebsmittel richtig ausgewählt','Stromkreise eindeutig beschriftet','RCD-Prüftaste betätigt','Drehfeld geprüft','Polung geprüft','Abschaltbedingungen geprüft'];
@@ -369,7 +369,8 @@ async function saveProtocolForm(event){
   event.preventDefault();const site=await dbGet('sites',currentSiteId);if(!site)return;
   const company=await dbGet('settings','company'),time=nowIso(),type=document.getElementById('newProtocolType').value;
   const data=makeBlankData({...(company&&company.data||{}),kunde:site.customer||'',objekt:site.name||'',adresse:site.address||'',datum:document.getElementById('newProtocolDate').value,erst:type==='erst',wieder:type==='wieder',aenderung:type==='aenderung'});
-  const protocol={id:makeId('protocol'),siteId:site.id,title:document.getElementById('newProtocolTitle').value.trim(),status:'draft',createdAt:time,updatedAt:time,data};
+  const subject=document.getElementById('newProtocolTitle').value.trim(),typeLabel=type==='erst'?'Erstprüfung':type==='wieder'?'Wiederholungsprüfung':'Änderung / Erweiterung';
+  const protocol={id:makeId('protocol'),siteId:site.id,title:`${typeLabel} · ${subject}`,status:'draft',createdAt:time,updatedAt:time,data};
   await dbPut('protocols',protocol);site.updatedAt=time;await dbPut('sites',site);closeProtocolDialog();await openProtocol(protocol.id);
 }
 async function openProtocol(protocolId){
@@ -421,7 +422,7 @@ function removePhoto(index){currentPhotos.splice(index,1);renderPhotos();saveDat
 async function exportBackup(){
   const [sites,protocols,settings]=await Promise.all([dbAll('sites'),dbAll('protocols'),dbAll('settings')]);
   const backup={format:'schaefchen-vde-backup',version:APP_VERSION,exportedAt:nowIso(),sites,protocols,settings};
-  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`schaefchen-sicherung-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);showToast('Lokale Sicherung erstellt');
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`schaefchen-sicherung-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);showToast('Sicherungsdatei heruntergeladen');
 }
 async function importBackupFile(event){
   const file=event.target.files&&event.target.files[0];event.target.value='';if(!file)return;
