@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#c01820">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=19">
+  <link rel="stylesheet" href="style.css?v=20">
   <title>VDE Prüfprotokoll</title>
 </head>
 <body>
@@ -88,19 +88,40 @@
   <section class="card protocolStep active" data-step="1">
     <div class="protocolSectionHead"><span>1</span><div><h2>Auftrag und Objekt</h2><p>Die Baustellendaten sind bereits übernommen und können hier ergänzt werden.</p></div></div>
     <div class="grid">
+      <label>Prüfprotokoll-Nr.<input id="protocolNo" placeholder="z. B. 2026-001"></label>
+      <label>Kunden-Nr.<input id="customerNo"></label>
+      <label>Auftrags-Nr.<input id="orderNo"></label>
+      <label>Blatt<input id="sheetNo" value="1" inputmode="numeric"></label>
+      <label>von<input id="sheetTotal" value="1" inputmode="numeric"></label>
       <label>Auftraggeber<input id="kunde"></label>
       <label>Objekt / Anlage<input id="objekt"></label>
       <label>Adresse<input id="adresse"></label>
-      <label>Prüfdatum<input id="datum" type="date"></label>
+      <label>Beginn der Prüfung<input id="datum" type="date"></label>
+      <label>Beginn Uhrzeit<input id="startTime" type="time"></label>
+      <label>Ende der Prüfung<input id="endDate" type="date"></label>
+      <label>Ende Uhrzeit<input id="endTime" type="time"></label>
       <label>Prüfer<input id="pruefer"></label>
       <label>Firma<input id="firma"></label>
       <label>Netzform<select id="netzform"><option>TN-S</option><option>TN-C-S</option><option>TN-C</option><option>TT</option><option>IT</option></select></label>
       <label>Nennspannung<input id="spannung" value="230/400 V"></label>
+      <label>Frequenz<input id="frequenz" value="50 Hz"></label>
+      <label>Netzbetreiber<input id="netzbetreiber"></label>
     </div>
+    <div class="formSubhead">Prüfung nach / Regelwerk</div>
+    <div class="checks ruleChecks">
+      <label><input type="checkbox" id="norm0100600" checked> DIN VDE 0100-600</label>
+      <label><input type="checkbox" id="norm0105100"> DIN VDE 0105-100</label>
+      <label><input type="checkbox" id="echeck"> E-CHECK</label>
+      <label><input type="checkbox" id="dguv3" checked> DGUV Vorschrift 3</label>
+      <label><input type="checkbox" id="betrsichv"> BetrSichV</label>
+    </div>
+    <div class="formSubhead">Art der Prüfung</div>
     <div class="checks">
-      <label><input type="radio" name="pruefart" id="erst"> Erstprüfung</label>
+      <label><input type="radio" name="pruefart" id="erst"> Neuanlage</label>
+      <label><input type="radio" name="pruefart" id="aenderung"> Änderung</label>
+      <label><input type="radio" name="pruefart" id="erweiterung"> Erweiterung</label>
       <label><input type="radio" name="pruefart" id="wieder"> Wiederholungsprüfung</label>
-      <label><input type="radio" name="pruefart" id="aenderung"> Änderung/Erweiterung</label>
+      <label><input type="radio" name="pruefart" id="instandsetzung"> Instandsetzung</label>
     </div>
   </section>
 
@@ -120,6 +141,34 @@
       <label>Kabeltyp Zuleitung<div class="cableCombo"><select id="hakCable" onchange="toggleCableCustom(this)"><option value="">Bitte wählen</option><option>NYM-J</option><option>NYM-O</option><option>NYY-J</option><option>NYY-O</option><option>N2XH-J</option><option>N2XH-O</option><option>NHXMH-J</option><option>NHXMH-O</option><option>H07V-U</option><option>H07V-K</option><option>H07RN-F</option><option>NYCWY</option><option>J-Y(St)Y</option><option>J-H(St)H</option><option>LiYY</option><option>CAT 7</option><option>CAT 7A</option><option>LWL</option><option value="__custom">Anderer Kabeltyp / frei eingeben</option></select><input id="hakCableCustom" class="cableCustom" placeholder="Kabeltyp selbst eingeben" style="display:none"></div></label>
       <label>Adernzahl Zuleitung<select id="hakCores"><option value="">Bitte wählen</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>7</option><option>10</option><option>12</option><option>16</option><option>18</option><option>24</option><option>48</option></select></label>
       <label>Querschnitt Zuleitung<span class="unitField"><input id="hakCross" inputmode="decimal" placeholder="z.B. 16"><span>mm²</span></span></label>
+    </div>
+  </section>
+
+  <section class="card protocolStep" data-step="3">
+    <div class="protocolSectionHead"><span>3.2</span><div><h2>Spannungsfall, Erdung und Potentialausgleich</h2><p>Nachweise und einbezogene leitfähige Systeme dokumentieren.</p></div></div>
+    <div class="grid">
+      <label>Spannungsfall nachgewiesen<span class="unitField"><input id="voltageDrop" inputmode="decimal" placeholder="z. B. 2,1"><span>%</span></span></label>
+      <label>Erdungswiderstand R<sub>E</sub><span class="unitField"><input id="earthResistance" inputmode="decimal"><span>Ω</span></span></label>
+      <label>Durchgängigkeit Potentialausgleich<span class="unitField"><input id="paResult" inputmode="decimal" placeholder="≤ 1"><span>Ω</span></span></label>
+    </div>
+    <div class="formSubhead">In den Potentialausgleich einbezogen</div>
+    <div class="checks potentialChecks">
+      <label><input type="checkbox" id="paFoundation"> Fundamenterder</label>
+      <label><input type="checkbox" id="paRing"> Ringerder</label>
+      <label><input type="checkbox" id="paHes"> Haupterdungsschiene</label>
+      <label><input type="checkbox" id="paWaterMeter"> Wasserzwischenzähler</label>
+      <label><input type="checkbox" id="paMainWater"> Hauptwasserleitung</label>
+      <label><input type="checkbox" id="paMainPe"> Hauptschutzleiter</label>
+      <label><input type="checkbox" id="paGas"> Gasinnenleitung</label>
+      <label><input type="checkbox" id="paHeating"> Heizungsanlage</label>
+      <label><input type="checkbox" id="paClimate"> Klimaanlage</label>
+      <label><input type="checkbox" id="paLift"> Aufzugsanlage</label>
+      <label><input type="checkbox" id="paEdv"> EDV-Anlage</label>
+      <label><input type="checkbox" id="paPhone"> Telefonanlage</label>
+      <label><input type="checkbox" id="paLightning"> Blitzschutzanlage</label>
+      <label><input type="checkbox" id="paAntenna"> Antennenanlage / BK</label>
+      <label><input type="checkbox" id="paBuilding"> Gebäudekonstruktion</label>
+      <label>Sonstiges<input id="paOther"></label>
     </div>
   </section>
 
@@ -151,10 +200,12 @@
   <section class="card result protocolStep" data-step="5">
     <div class="protocolSectionHead"><span>5.4</span><div><h2>Ergebnis und Fertigstellung</h2><p>Fachliche Schlussbewertung festlegen und Protokoll abschließen.</p></div></div>
     <select id="ergebnis"><option>Anlage ist in Ordnung</option><option>Anlage ist mit Mängeln betriebsbereit</option><option>Anlage ist nicht betriebsbereit</option></select>
+    <label>Prüfplakette<select id="plakette"><option value="">Nicht bewertet</option><option value="ja">Ja – angebracht</option><option value="nein">Nein</option></select></label>
     <label>Nächste Prüfung empfohlen bis<input id="next" type="date"></label>
   </section>
 
   <div class="actions protocolStep" data-step="5">
+    <button class="completeButton" onclick="completeProtocol()">Prüfung abschließen ✓</button>
     <button onclick="saveData(true)">Jetzt speichern</button>
     <button onclick="preparePrint();window.print()">PDF / Drucken</button>
     <button class="danger" onclick="resetData()">Prüfung löschen</button>
@@ -191,7 +242,7 @@
     <div class="grid">
       <label>Geprüfte Anlage / Verteilung *<input id="newProtocolTitle" required placeholder="z. B. UV EG, Hauptverteilung oder Wohnung 3"><small>Die App erstellt daraus automatisch eine Bezeichnung wie „Erstprüfung · UV EG“.</small></label>
       <label>Prüfdatum<input id="newProtocolDate" type="date"></label>
-      <label>Prüfart<select id="newProtocolType"><option value="erst">Erstprüfung</option><option value="wieder">Wiederholungsprüfung</option><option value="aenderung">Änderung / Erweiterung</option></select></label>
+      <label>Prüfart<select id="newProtocolType"><option value="erst">Neuanlage</option><option value="wieder">Wiederholungsprüfung</option><option value="aenderung">Änderung</option><option value="erweiterung">Erweiterung</option><option value="instandsetzung">Instandsetzung</option></select></label>
     </div>
     <div id="protocolDeviceHint" class="presetHint">Prüfgerät aus den Voreinstellungen wird übernommen.</div>
     <div class="dialogActions"><button type="button" class="secondary" onclick="closeProtocolDialog()">Abbrechen</button><button type="submit">Prüfung beginnen</button></div>
@@ -206,11 +257,16 @@
       <h3>Prüfgerät</h3>
       <p>Das verwendete Messgerät wird vor der Prüfung festgelegt und im PDF dokumentiert.</p>
       <div class="grid">
+        <label>Messgerät nach VDE<input id="gVde" placeholder="z. B. DIN VDE 0413"></label>
         <label>Hersteller<input id="gHersteller" placeholder="z. B. Gossen Metrawatt"></label>
         <label>Typ<input id="gTyp" placeholder="z. B. PROFITEST"></label>
         <label>Seriennummer<input id="gSerie"></label>
         <label>Kalibrierung gültig bis<input id="gKal" type="date"></label>
       </div>
+      <details class="extraDevices"><summary>Weitere Messgeräte (optional)</summary><div class="grid">
+        <label>Messgerät 2 – Hersteller<input id="g2Hersteller"></label><label>Messgerät 2 – Typ<input id="g2Typ"></label><label>Messgerät 2 – Seriennummer<input id="g2Serie"></label><label>Messgerät 2 – Kalibrierung bis<input id="g2Kal" type="date"></label>
+        <label>Messgerät 3 – Hersteller<input id="g3Hersteller"></label><label>Messgerät 3 – Typ<input id="g3Typ"></label><label>Messgerät 3 – Seriennummer<input id="g3Serie"></label><label>Messgerät 3 – Kalibrierung bis<input id="g3Kal" type="date"></label>
+      </div></details>
     </section>
     <section class="presetSection">
       <h3>Firmendaten und Prüfer</h3>
@@ -235,6 +291,6 @@
 </dialog>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="script.js?v=19"></script>
+<script src="script.js?v=20"></script>
 </body>
 </html>
