@@ -1,7 +1,7 @@
 const LEGACY_STORAGE='vde-protokoll-v15-sichtbarkeit-reihenfolge';
 const DB_NAME='schaefchen-vde-local';
 const DB_VERSION=1;
-const APP_VERSION=20;
+const APP_VERSION=21;
 const logoData='logo.png';
 const fields=['protocolNo','customerNo','orderNo','sheetNo','sheetTotal','kunde','objekt','adresse','datum','startTime','endDate','endTime','pruefer','firma','netzform','spannung','frequenz','netzbetreiber','norm0100600','norm0105100','echeck','dguv3','betrsichv','erst','wieder','aenderung','erweiterung','instandsetzung','gVde','gHersteller','gTyp','gSerie','gKal','g2Hersteller','g2Typ','g2Serie','g2Kal','g3Hersteller','g3Typ','g3Serie','g3Kal','voltageDrop','earthResistance','paResult','paFoundation','paRing','paHes','paWaterMeter','paMainWater','paMainPe','paGas','paHeating','paClimate','paLift','paEdv','paPhone','paLightning','paAntenna','paBuilding','paOther','maengel','ergebnis','plakette','next','firmName','firmStreet','firmCity','firmTel','firmFax','firmMobile','firmEmail','firmCEO','firmCourt','firmHRB','defaultPruefer','hakName','hakPlace','hakFuse','hakSource','hakCable','hakCableCustom','hakCores','hakCross'];
 const checkGroups=[
@@ -264,6 +264,50 @@ function preparePrint(){
     </div>
     <p class="smalltxt">Hinweis: Automatische Bewertungen sind Hilfsfunktionen und ersetzen nicht die fachliche Beurteilung durch die Elektrofachkraft.</p><div class="footerSpace"></div>${footer}`;
 }
+function printProtocol(){preparePrint();setTimeout(()=>{if(typeof window.print==='function')window.print();else showToast('Drucken wird von diesem Browser nicht unterstützt.',true)},120)}
+function pdfImageData(img){try{if(!img||!img.complete||!img.naturalWidth)return '';const c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext('2d').drawImage(img,0,0);return c.toDataURL('image/png')}catch(_){return ''}}
+function pdfFileName(f){const base=f.protocolNo||document.getElementById('protocolTitle').value||'VDE-Pruefprotokoll';return `${String(base).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9._-]+/g,'-').replace(/^-|-$/g,'')||'VDE-Pruefprotokoll'}.pdf`}
+async function createPdf(){
+  const button=document.getElementById('pdfButton'),oldText=button&&button.textContent;if(button){button.disabled=true;button.textContent='PDF wird erstellt …'}
+  try{
+    if(!window.jspdf||!window.jspdf.jsPDF)throw new Error('PDF-Modul wurde nicht geladen');
+    const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4',compress:true}),d=collect(),f=d.fields||{},pageW=doc.internal.pageSize.getWidth(),pageH=doc.internal.pageSize.getHeight(),margin=10;
+    const runTable=options=>{if(typeof doc.autoTable==='function')doc.autoTable(options);else if(window.jspdfAutotable&&typeof window.jspdfAutotable.autoTable==='function')window.jspdfAutotable.autoTable(doc,options);else throw new Error('PDF-Tabellenmodul wurde nicht geladen')};
+    const standards=[f.norm0100600&&'DIN VDE 0100-600',f.norm0105100&&'DIN VDE 0105-100',f.echeck&&'E-CHECK',f.dguv3&&'DGUV Vorschrift 3',f.betrsichv&&'BetrSichV'].filter(Boolean).join(' · ')||'-';
+    const testType=[f.erst&&'Neuanlage',f.aenderung&&'Änderung',f.erweiterung&&'Erweiterung',f.wieder&&'Wiederholungsprüfung',f.instandsetzung&&'Instandsetzung'].filter(Boolean).join(', ')||'-';
+    let y=12;const ensure=height=>{if(y+height>pageH-16){doc.addPage();y=12}};
+    const section=title=>{ensure(12);doc.setFillColor(32,37,43);doc.rect(margin,y,pageW-margin*2,8,'F');doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text(title,margin+3,y+5.5);doc.setTextColor(31,41,51);y+=11};
+    const table=(head,body,options={})=>{runTable({startY:y,head:[head],body,theme:'grid',margin:{left:margin,right:margin},styles:{font:'helvetica',fontSize:options.fontSize||7.5,cellPadding:1.4,valign:'middle',overflow:'linebreak'},headStyles:{fillColor:[192,24,32],textColor:255,fontStyle:'bold'},alternateRowStyles:{fillColor:[247,249,251]},...options});y=(doc.lastAutoTable&&doc.lastAutoTable.finalY||y)+5};
+    const logo=pdfImageData(document.querySelector('.appLogo'));if(logo)doc.addImage(logo,'PNG',margin,7,38,14,undefined,'FAST');
+    doc.setFont('helvetica','bold');doc.setFontSize(19);doc.setTextColor(32,37,43);doc.text('VDE Prüfprotokoll',logo?53:margin,13);
+    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(102,120,138);doc.text(standards,logo?53:margin,19);
+    doc.setFontSize(8);doc.setTextColor(32,37,43);doc.text(`Protokoll-Nr.: ${f.protocolNo||'-'}   ·   Blatt ${f.sheetNo||'1'} von ${f.sheetTotal||'1'}`,pageW-margin,12,{align:'right'});doc.text(`Prüfer: ${f.pruefer||'-'}`,pageW-margin,18,{align:'right'});y=26;
+    section('Auftrag und Prüfungsdaten');
+    table(['Angabe','Wert','Angabe','Wert'],[
+      ['Kunden-Nr.',f.customerNo||'-','Auftrags-Nr.',f.orderNo||'-'],['Auftraggeber',f.kunde||'-','Auftragnehmer',f.firmName||f.firma||'-'],['Anlage / Objekt',f.objekt||'-','Adresse',f.adresse||'-'],['Beginn',`${f.datum||'-'} ${f.startTime||''}`.trim(),'Ende',`${f.endDate||'-'} ${f.endTime||''}`.trim()],['Prüfart',testType,'Regelwerk',standards],['Netz',`${f.spannung||'-'} · ${f.frequenz||'-'}`,'Netzsystem / Betreiber',`${f.netzform||'-'} · ${f.netzbetreiber||'-'}`]
+    ],{columnStyles:{0:{cellWidth:32,fontStyle:'bold'},1:{cellWidth:95},2:{cellWidth:38,fontStyle:'bold'}}});
+    section('Verwendete Messgeräte');
+    const deviceRows=[[f.gHersteller,f.gTyp,f.gSerie,f.gKal],[f.g2Hersteller,f.g2Typ,f.g2Serie,f.g2Kal],[f.g3Hersteller,f.g3Typ,f.g3Serie,f.g3Kal]].filter(row=>row.some(Boolean)).map((row,i)=>[i+1,row[0]||'-',row[1]||'-',row[2]||'-',row[3]||'-']);
+    table(['Nr.','Fabrikat','Typ','Seriennummer','Kalibrierung gültig bis'],deviceRows.length?deviceRows:[['1','-','-','-','-']],{columnStyles:{0:{cellWidth:16}},fontSize:8});
+    section('Besichtigen und Erproben');let ci=0;const checkRows=[];checkGroups.forEach(group=>group.items.forEach(item=>{const value=d.checks&&d.checks[ci++];checkRows.push([group.title,item,value==='io'?'i.O.':value==='nio'?'n.i.O.':'nicht bewertet'])}));
+    table(['Bereich','Prüfpunkt','Bewertung'],checkRows,{columnStyles:{0:{cellWidth:34},2:{cellWidth:30}},fontSize:7.5});
+    section('Einspeisung, Erdung und Potentialausgleich');const potential=potentialFields.filter(([id])=>f[id]).map(([,label])=>label).concat(f.paOther?[f.paOther]:[]).join(', ')||'Keine Angaben';
+    table(['Angabe','Wert'],[['Hausanschluss / Ort',`${f.hakName||'-'} · ${f.hakPlace||'-'}`],['Vorsicherung / Herkunft',`${f.hakFuse||'-'} · ${f.hakSource||'-'}`],['Zuleitung',`${displayCable(f.hakCable,f.hakCableCustom)||'-'} · ${f.hakCores||'-'}-adrig · ${f.hakCross||'-'} mm²`],['Spannungsfall',`${f.voltageDrop||'-'} %`],['Erdungswiderstand RE',`${f.earthResistance||'-'} Ω`],['Potentialausgleich',`${f.paResult||'-'} Ω`],['Einbezogene Systeme',potential]],{columnStyles:{0:{cellWidth:52,fontStyle:'bold'}},fontSize:8});
+    const protectionRows=[],measurementRows=[],isolationRows=[];
+    (d.uvs||[]).forEach((u,ui)=>{(u.rcds||[]).forEach((r,ri)=>{const fiNumber=`${ui+1}.${ri+1}`;(r.circuits||[]).forEach((c,cki)=>pdfCircuitRows(`${fiNumber}.${cki+1}`,u,r,c,true,protectionRows,measurementRows,isolationRows))});(u.direct||[]).forEach((c,cki)=>pdfCircuitRows(`${ui+1}.D${cki+1}`,u,null,c,false,protectionRows,measurementRows,isolationRows))});
+    section('Stromkreise und Schutzorgane');table(['Nr.','UV','Zielbezeichnung','Leitung','Adern / mm²','Schutzart','FI-Zuordnung','Schutzorgan','Bewertung'],protectionRows.length?protectionRows:[['-','-','Keine Stromkreise','-','-','-','-','-','-']],{fontSize:6.5});
+    section('Messwerte');table(['Nr.','RPE Ω','RISO MΩ','U Mess V','Zi L-N Ω','Zs L-PE Ω','IK A','UL V','RCD ms','RCD mA','Fehlercode','Bemerkung'],measurementRows.length?measurementRows:[['-','-','-','-','-','-','-','-','-','-','-','-']],{fontSize:6.5});
+    section('Detaillierte Isolationsmessung');table(['Nr.','Verbr.','N–PE','L1–PE','L1–N','L2–PE','L2–N','L3–PE','L3–N','L1–L2','L1–L3','L2–L3'],isolationRows.length?isolationRows:[['-','-','-','-','-','-','-','-','-','-','-','-']],{fontSize:6.2});
+    section('Mängel und Ergebnis');table(['Angabe','Dokumentation'],[['Mängel / Hinweise',f.maengel||'Keine Angaben'],['Ergebnis',f.ergebnis||'-'],['Prüfplakette',f.plakette==='ja'?'Ja – angebracht':f.plakette==='nein'?'Nein':'Nicht bewertet'],['Nächster Prüftermin',f.next||'-']],{columnStyles:{0:{cellWidth:44,fontStyle:'bold'}},fontSize:8});
+    ensure(38);doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text('Unterschrift Prüfer',margin,y);doc.text('Unterschrift Auftraggeber / Betreiber',150,y);y+=3;doc.setDrawColor(120);doc.rect(margin,y,120,28);doc.rect(150,y,120,28);if(d.sig&&d.sig.startsWith('data:image')){try{doc.addImage(d.sig,'PNG',margin+2,y+2,116,24,undefined,'FAST')}catch(_){/* Unterschrift bleibt als Feld */}}y+=34;
+    if((d.photos||[]).length){section('Fotodokumentation');let x=margin,col=0;for(let i=0;i<d.photos.length;i++){const photo=d.photos[i];if(col===3){y+=52;x=margin;col=0}ensure(52);try{doc.addImage(photo.dataUrl,'JPEG',x,y,84,43,undefined,'FAST')}catch(_){try{doc.addImage(photo.dataUrl,'PNG',x,y,84,43,undefined,'FAST')}catch(__){/* Bild überspringen */}}doc.setFontSize(7);doc.text(photo.name||`Foto ${i+1}`,x,y+47,{maxWidth:84});x+=91;col++}y+=52}
+    const pages=doc.getNumberOfPages();for(let page=1;page<=pages;page++){doc.setPage(page);doc.setDrawColor(190);doc.line(margin,pageH-10,pageW-margin,pageH-10);doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(90);doc.text(`${f.firmName||''} · ${f.firmStreet||''} · ${f.firmCity||''} · ${f.firmTel||''} · ${f.firmEmail||''}`,margin,pageH-6);doc.text(`Seite ${page} von ${pages}`,pageW-margin,pageH-6,{align:'right'})}
+    const blob=doc.output('blob'),filename=pdfFileName(f),file=new File([blob],filename,{type:'application/pdf'});let shared=false;
+    if(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]}))){try{await navigator.share({files:[file],title:'VDE Prüfprotokoll'});shared=true;showToast('PDF erstellt und zum Teilen geöffnet')}catch(error){if(error&&error.name==='AbortError'){showToast('Teilen abgebrochen');return}}}
+    if(!shared){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);showToast('PDF wurde erstellt und heruntergeladen')}
+  }catch(error){console.error(error);showToast(`PDF konnte nicht erstellt werden: ${error.message||'Unbekannter Fehler'}`,true)}finally{if(button){button.disabled=false;button.textContent=oldText}}
+}
+function pdfCircuitRows(number,u,r,c,hasUpstreamRcd,protectionRows,measurementRows,isolationRows){const hasRcd=hasUpstreamRcd||c.device==='fils',ce=circuitEvalText(c,hasRcd,r),kind=c.device==='fils'?'FI/LS':hasUpstreamRcd?'LS mit FI davor':'LS ohne FI',fi=c.device==='fils'?'integriert':hasUpstreamRcd?(r&&r.name||'FI'):'kein FI',device=c.device==='fils'?`FI/LS ${(c.char||'')}${c.a||''} A · Typ ${c.rcdType||'A'} · ${c.rcdIdn||'30'} mA`:`LS ${(c.char||'')}${c.a||''} A`;protectionRows.push([number,u.name||'-',c.name||'-',c.cable||'-',`${c.cores||'-'} / ${c.cross||'-'}`,kind,fi,device,ce.text]);measurementRows.push([number,c.rpe||'-',c.riso||'-',c.risoV||'-',c.zi||'-',c.zs||'-',c.ik||'-',c.rcdUl||'-',c.rcdms||'-',c.rcdma||'-',c.fault||'-',c.note||ce.msg||'-']);isolationRows.push([number,c.consumer==='ja'?'Ja':c.consumer==='nein'?'Nein':'-',...risoKeys.map(key=>c[key]||'-')])}
 function protectionLabel(c, hasUpstreamRcd, r){
   if(c.device==='fils'){
     return {kind:'FI/LS', fi:'FI/LS integriert', device:`FI/LS ${esc((c.char||'')+(c.a||'')+'A')} / Typ ${esc(c.rcdType||'A')} / IΔn ${esc(c.rcdIdn||'30')} mA`};
