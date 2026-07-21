@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#c01820">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=18">
+  <link rel="stylesheet" href="style.css?v=19">
   <title>VDE Prüfprotokoll</title>
 </head>
 <body>
@@ -26,7 +26,10 @@
       <h2>Baustellen</h2>
       <p>Jede Baustelle ist ein eigener Ordner. Prüfungen werden automatisch als Entwurf gespeichert und können jederzeit fortgesetzt werden.</p>
     </div>
-    <button onclick="openSiteDialog()">+ Baustelle anlegen</button>
+    <div class="heroActions">
+      <button class="heroSecondary" onclick="openPresetDialog()">⚙️ Voreinstellungen</button>
+      <button onclick="openSiteDialog()">+ Baustelle anlegen</button>
+    </div>
   </section>
 
   <section id="siteOverview">
@@ -80,31 +83,10 @@
     <button type="button" data-step-target="5" onclick="showStep(5)"><span>5</span><b>Abschluss</b></button>
   </nav>
 
-  <div id="stepIntro" class="stepIntro"><div><span id="stepCounter">Schritt 1 von 5</span><h2 id="stepTitle">Auftrag und Prüfdaten</h2><p id="stepDescription">Grunddaten zur Baustelle, Prüfart und zum verwendeten Prüfgerät.</p></div><div id="stepProgress">0 % ausgefüllt</div></div>
-
-  <details class="card settingsCard">
-    <summary><span>⚙️ Firmendaten und Logo</span><small>Nur öffnen, wenn sich Stammdaten geändert haben</small></summary>
-    <div id="settingsPanel">
-      <p class="hint">Diese Daten werden lokal gespeichert und im PDF automatisch in der Fußzeile jeder Seite ausgegeben.</p>
-      <div class="grid">
-        <label>Firmenname<input id="firmName" value="Schaaf-Elektro GmbH"></label>
-        <label>Straße / Hausnummer<input id="firmStreet" value="Dresdner Str. 30b"></label>
-        <label>PLZ / Ort<input id="firmCity" value="04720 Döbeln"></label>
-        <label>Telefon<input id="firmTel" value="03431 / 717830"></label>
-        <label>Fax<input id="firmFax" value="03431 / 717839"></label>
-        <label>Mobil<input id="firmMobile" value="0160 / 90867501"></label>
-        <label>E-Mail<input id="firmEmail" value="b.spallek@schaaf-elektro.de"></label>
-        <label>Geschäftsführer<input id="firmCEO" value="Steffen Scheer, Torsten Schaaf"></label>
-        <label>Registergericht<input id="firmCourt" value="Amtsgericht Chemnitz"></label>
-        <label>HRB<input id="firmHRB" value="HRB 103539"></label>
-        <label>Prüfer Standard<input id="defaultPruefer" placeholder="Name Prüfer"></label>
-      </div>
-      <div id="logoPreview" class="logoPreview fixedLogo"><img src="logo.png" alt="Schaaf-Elektro Logo"><span>Fest hinterlegtes Firmenlogo</span></div>
-    </div>
-  </details>
+  <div id="stepIntro" class="stepIntro"><div><span id="stepCounter">Schritt 1 von 5</span><h2 id="stepTitle">Auftrag und Prüfdaten</h2><p id="stepDescription">Grunddaten zur Baustelle und Prüfart.</p></div><div id="stepProgress">0 % ausgefüllt</div></div>
 
   <section class="card protocolStep active" data-step="1">
-    <div class="protocolSectionHead"><span>1.1</span><div><h2>Auftrag und Objekt</h2><p>Die Baustellendaten sind bereits übernommen und können hier ergänzt werden.</p></div></div>
+    <div class="protocolSectionHead"><span>1</span><div><h2>Auftrag und Objekt</h2><p>Die Baustellendaten sind bereits übernommen und können hier ergänzt werden.</p></div></div>
     <div class="grid">
       <label>Auftraggeber<input id="kunde"></label>
       <label>Objekt / Anlage<input id="objekt"></label>
@@ -119,16 +101,6 @@
       <label><input type="radio" name="pruefart" id="erst"> Erstprüfung</label>
       <label><input type="radio" name="pruefart" id="wieder"> Wiederholungsprüfung</label>
       <label><input type="radio" name="pruefart" id="aenderung"> Änderung/Erweiterung</label>
-    </div>
-  </section>
-
-  <section class="card protocolStep" data-step="1">
-    <div class="protocolSectionHead"><span>1.2</span><div><h2>Prüfgerät</h2><p>Gerätedaten für die Rückverfolgbarkeit der Messung.</p></div></div>
-    <div class="grid">
-      <label>Hersteller<input id="gHersteller"></label>
-      <label>Typ<input id="gTyp"></label>
-      <label>Seriennummer<input id="gSerie"></label>
-      <label>Kalibrierung gültig bis<input id="gKal" type="date"></label>
     </div>
   </section>
 
@@ -221,11 +193,48 @@
       <label>Prüfdatum<input id="newProtocolDate" type="date"></label>
       <label>Prüfart<select id="newProtocolType"><option value="erst">Erstprüfung</option><option value="wieder">Wiederholungsprüfung</option><option value="aenderung">Änderung / Erweiterung</option></select></label>
     </div>
+    <div id="protocolDeviceHint" class="presetHint">Prüfgerät aus den Voreinstellungen wird übernommen.</div>
     <div class="dialogActions"><button type="button" class="secondary" onclick="closeProtocolDialog()">Abbrechen</button><button type="submit">Prüfung beginnen</button></div>
   </form>
 </dialog>
 
+<dialog id="presetDialog" class="appDialog presetDialog">
+  <form id="presetForm" method="dialog">
+    <div class="dialogHead"><div><div class="eyebrow">Lokale Voreinstellungen</div><h2>Firma, Prüfer und Prüfgerät</h2></div><button type="button" class="iconButton secondary" onclick="closePresetDialog()" aria-label="Schließen">×</button></div>
+    <p class="hint">Diese Angaben werden einmalig auf diesem Gerät gespeichert und automatisch in jede neue Prüfung übernommen.</p>
+    <section class="presetSection">
+      <h3>Prüfgerät</h3>
+      <p>Das verwendete Messgerät wird vor der Prüfung festgelegt und im PDF dokumentiert.</p>
+      <div class="grid">
+        <label>Hersteller<input id="gHersteller" placeholder="z. B. Gossen Metrawatt"></label>
+        <label>Typ<input id="gTyp" placeholder="z. B. PROFITEST"></label>
+        <label>Seriennummer<input id="gSerie"></label>
+        <label>Kalibrierung gültig bis<input id="gKal" type="date"></label>
+      </div>
+    </section>
+    <section class="presetSection">
+      <h3>Firmendaten und Prüfer</h3>
+      <p>Die Firmendaten erscheinen automatisch in der PDF-Fußzeile.</p>
+      <div class="grid">
+        <label>Firmenname<input id="firmName" value="Schaaf-Elektro GmbH"></label>
+        <label>Straße / Hausnummer<input id="firmStreet" value="Dresdner Str. 30b"></label>
+        <label>PLZ / Ort<input id="firmCity" value="04720 Döbeln"></label>
+        <label>Telefon<input id="firmTel" value="03431 / 717830"></label>
+        <label>Fax<input id="firmFax" value="03431 / 717839"></label>
+        <label>Mobil<input id="firmMobile" value="0160 / 90867501"></label>
+        <label>E-Mail<input id="firmEmail" value="b.spallek@schaaf-elektro.de"></label>
+        <label>Geschäftsführer<input id="firmCEO" value="Steffen Scheer, Torsten Schaaf"></label>
+        <label>Registergericht<input id="firmCourt" value="Amtsgericht Chemnitz"></label>
+        <label>HRB<input id="firmHRB" value="HRB 103539"></label>
+        <label>Prüfer Standard<input id="defaultPruefer" placeholder="Name Prüfer"></label>
+      </div>
+      <div id="logoPreview" class="logoPreview fixedLogo"><img src="logo.png" alt="Schaaf-Elektro Logo"><span>Fest hinterlegtes Firmenlogo</span></div>
+    </section>
+    <div class="dialogActions"><button type="button" class="secondary" onclick="closePresetDialog()">Abbrechen</button><button type="submit">Voreinstellungen speichern</button></div>
+  </form>
+</dialog>
+
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="script.js?v=18"></script>
+<script src="script.js?v=19"></script>
 </body>
 </html>
