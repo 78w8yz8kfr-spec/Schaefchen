@@ -2029,3 +2029,22 @@ button:disabled {
   }
 }
 \n\n/* v26 neues Firmenlogo in App, PWA und PDF */\n
+/* v26 Ausgabe abgeschlossener Prüfungen */
+.protocolOutputActions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 7px;
+}
+.protocolOutputActions button {
+  padding: 9px;
+  font-size: 12px;
+}
+.actions .completedOnlyAction {
+  flex: 1 1 calc(50% - 4px);
+}
+@media (max-width: 520px) {
+  .protocolOutputActions {
+    grid-template-columns: 1fr;
+  }
+}
