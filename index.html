@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#c01820">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=23">
+  <link rel="stylesheet" href="style.css?v=24">
   <title>VDE Prüfprotokoll</title>
 </head>
 <body>
@@ -38,6 +38,7 @@
       <label class="searchField"><span>Baustelle suchen</span><input id="siteSearch" type="search" placeholder="Name, Kunde, Adresse …"></label>
       <div class="backupTools">
         <p><b>Datensicherung</b><span>Für Gerätewechsel oder falls Browserdaten gelöscht werden.</span></p>
+        <div id="backupReminder" class="backupReminder hidden"></div>
         <div class="toolbarButtons">
           <button class="secondary" onclick="exportBackup()">Alle Daten sichern</button>
           <button class="secondary" onclick="document.getElementById('backupImport').click()">Sicherung wiederherstellen</button>
@@ -66,7 +67,7 @@
 
 <main id="appMain" class="hidden">
   <section class="editorBar">
-    <button class="secondary backButton" onclick="closeEditor()">← Baustellenordner</button>
+    <button id="editorBackButton" class="secondary backButton" onclick="closeEditor()">← Baustellenordner</button>
     <div class="editorIdentity">
       <span><b id="editorSiteName"></b> · Prüfprotokoll</span>
       <input id="protocolTitle" aria-label="Bezeichnung der Prüfung" placeholder="z. B. Erstprüfung · UV EG">
@@ -74,6 +75,8 @@
     <label class="statusSelect">Status<select id="protocolStatus"><option value="draft">Entwurf</option><option value="completed">Abgeschlossen</option></select></label>
     <div id="saveState" class="saveState">Gespeichert</div>
   </section>
+
+  <section id="lockedBanner" class="lockedBanner hidden"><div><b>Abgeschlossene Prüfung</b><span id="lockedBannerText">Dieses Protokoll ist schreibgeschützt.</span></div><button id="reopenButton" type="button" onclick="reopenProtocolForEditing()">Erneut bearbeiten</button></section>
 
   <nav class="protocolStepper" aria-label="Prüfabschnitte">
     <button type="button" class="active" data-step-target="1" onclick="showStep(1)"><span>1</span><b>Auftrag</b></button>
@@ -107,6 +110,7 @@
       <label>Frequenz<input id="frequenz" value="50 Hz"></label>
       <label>Netzbetreiber<input id="netzbetreiber"></label>
     </div>
+    <div id="calibrationStatus" class="calibrationStatus"></div>
     <div class="formSubhead">Prüfung nach / Regelwerk</div>
     <div class="checks ruleChecks">
       <label><input type="checkbox" id="norm0100600" checked> DIN VDE 0100-600</label>
@@ -208,7 +212,7 @@
     <button class="completeButton" onclick="completeProtocol()">Prüfung abschließen ✓</button>
     <button onclick="saveData(true)">Jetzt speichern</button>
     <button id="pdfButton" onclick="createPdf()">PDF erstellen / teilen</button>
-    <button class="secondary" onclick="printProtocol()">Drucken</button>
+    <button id="printButton" class="secondary" onclick="printProtocol()">Drucken</button>
     <button class="danger" onclick="resetData()">Prüfung löschen</button>
   </div>
 
@@ -284,6 +288,7 @@
         <label>Registergericht<input id="firmCourt" value="Amtsgericht Chemnitz"></label>
         <label>HRB<input id="firmHRB" value="HRB 103539"></label>
         <label>Prüfer Standard<input id="defaultPruefer" placeholder="Name Prüfer"></label>
+        <label>Verantwortlicher Meister<input id="masterName" placeholder="Name Meister"></label>
       </div>
       <div id="logoPreview" class="logoPreview fixedLogo"><img src="logo.png" alt="Schaaf-Elektro Logo"><span>Fest hinterlegtes Firmenlogo</span></div>
     </section>
@@ -291,9 +296,18 @@
   </form>
 </dialog>
 
+<dialog id="completionDialog" class="appDialog completionDialog">
+  <form method="dialog">
+    <div class="dialogHead"><div><div class="eyebrow">Abschlusskontrolle</div><h2>Prüfung abschließen</h2></div><button type="button" class="iconButton secondary" onclick="closeCompletionDialog()" aria-label="Schließen">×</button></div>
+    <p id="completionSummary" class="hint"></p>
+    <div id="completionIssueList" class="completionIssueList"></div>
+    <div class="dialogActions"><button type="button" class="secondary" onclick="closeCompletionDialog()">Angaben prüfen</button><button id="confirmCompletionButton" type="button" onclick="confirmProtocolCompletion()">Trotzdem abschließen</button></div>
+  </form>
+</dialog>
+
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script src="jspdf.umd.min.js?v=21"></script>
 <script src="jspdf.plugin.autotable.min.js?v=21"></script>
-<script src="script.js?v=23"></script>
+<script src="script.js?v=24"></script>
 </body>
 </html>
