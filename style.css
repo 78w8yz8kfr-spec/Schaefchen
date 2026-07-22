@@ -2164,3 +2164,28 @@ button:disabled {
     max-height: 76px !important;
   }
 }
+
+/* v32: vollständiges Firmenlogo ohne Verzerrung oder Beschnitt */
+.appHeader {
+  align-items: center !important;
+}
+.appLogo {
+  display: block !important;
+  width: 122px !important;
+  height: auto !important;
+  max-width: 122px !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  flex: 0 0 122px !important;
+}
+@media (max-width: 520px) {
+  .appLogo {
+    width: 116px !important;
+    max-width: 116px !important;
+    height: auto !important;
+    flex-basis: 116px !important;
+  }
+}

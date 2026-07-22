@@ -2,7 +2,7 @@ const LEGACY_STORAGE = "vde-protokoll-v15-sichtbarkeit-reihenfolge";
 const DB_NAME = "schaefchen-vde-local";
 const DB_VERSION = 1;
 const APP_VERSION = 26;
-const logoData = "logo.png?v=31";
+const logoData = "logo.png?v=32";
 const fields = [
   "protocolNo",
   "customerNo",
@@ -1164,7 +1164,7 @@ function updateLogoPreview() {
   const p = document.getElementById("logoPreview");
   if (p)
     p.innerHTML =
-      '<img src="logo.png?v=31" alt="Schaaf-Elektro GmbH Logo"><span>Fest hinterlegtes Firmenlogo</span>';
+      '<img src="logo.png?v=32" alt="Schaaf-Elektro GmbH Logo"><span>Fest hinterlegtes Firmenlogo</span>';
 }
 function initSettings() {
   updateLogoPreview();
