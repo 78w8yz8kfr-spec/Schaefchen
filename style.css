@@ -2114,3 +2114,30 @@ button:disabled {
 .protocolOutputActions {
   margin-top: 10px !important;
 }
+
+/* v30: originales Firmenlogo unverändert und proportional darstellen */
+.appHeader {
+  align-items: center !important;
+}
+.appLogo {
+  display: block !important;
+  width: auto !important;
+  height: 76px !important;
+  max-width: 132px !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  overflow: visible !important;
+  flex: 0 0 auto !important;
+}
+@media (max-width: 520px) {
+  .appHeader {
+    align-items: center !important;
+  }
+  .appLogo {
+    width: auto !important;
+    height: 72px !important;
+    max-width: 126px !important;
+  }
+}
