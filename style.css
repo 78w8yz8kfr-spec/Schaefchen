@@ -464,10 +464,12 @@ canvas {
   align-items: center;
 }
 .appLogo {
-  width: 92px;
-  max-height: 70px;
+  width: 74px;
+  height: 74px;
   object-fit: contain;
   background: white;
+  border-radius: 16px;
+  flex: 0 0 auto;
 }
 .fixedLogo {
   display: flex;
@@ -477,19 +479,21 @@ canvas {
   font-size: 13px;
 }
 .fixedLogo img {
-  max-width: 180px;
-  max-height: 90px;
+  width: 82px;
+  height: 82px;
+  object-fit: contain;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 16px;
   background: white;
-  padding: 6px;
 }
 @media (max-width: 520px) {
   .appHeader {
     align-items: flex-start;
   }
   .appLogo {
-    width: 74px;
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
   }
   h1 {
     font-size: 24px;
@@ -2024,3 +2028,4 @@ button:disabled {
     font-size: 9px;
   }
 }
+\n\n/* v26 neues Firmenlogo in App, PWA und PDF */\n
