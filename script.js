@@ -1,8 +1,8 @@
 const LEGACY_STORAGE = "vde-protokoll-v15-sichtbarkeit-reihenfolge";
 const DB_NAME = "schaefchen-vde-local";
 const DB_VERSION = 1;
-const APP_VERSION = 25;
-const logoData = "logo.png";
+const APP_VERSION = 26;
+const logoData = "logo.png?v=26";
 const fields = [
   "protocolNo",
   "customerNo",
@@ -1164,7 +1164,7 @@ function updateLogoPreview() {
   const p = document.getElementById("logoPreview");
   if (p)
     p.innerHTML =
-      '<img src="logo.png" alt="Schaaf-Elektro Logo"><span>Fest hinterlegtes Firmenlogo</span>';
+      '<img src="logo.png?v=26" alt="Schaaf-Elektro GmbH Logo"><span>Fest hinterlegtes Firmenlogo</span>';
 }
 function initSettings() {
   updateLogoPreview();
@@ -2188,15 +2188,16 @@ async function createPdf() {
       y = ((doc.lastAutoTable && doc.lastAutoTable.finalY) || y) + 5;
     };
     const logo = pdfImageData(document.querySelector(".appLogo"));
-    if (logo) doc.addImage(logo, "PNG", margin, 7, 38, 14, undefined, "FAST");
+    const titleX = logo ? 34 : margin;
+    if (logo) doc.addImage(logo, "PNG", margin, 4, 20, 20, undefined, "FAST");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(19);
     doc.setTextColor(32, 37, 43);
-    doc.text("VDE Prüfprotokoll", logo ? 53 : margin, 13);
+    doc.text("VDE Prüfprotokoll", titleX, 13);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(102, 120, 138);
-    doc.text(standards, logo ? 53 : margin, 19);
+    doc.text(standards, titleX, 19);
     doc.setFontSize(8);
     doc.setTextColor(32, 37, 43);
     doc.text(
