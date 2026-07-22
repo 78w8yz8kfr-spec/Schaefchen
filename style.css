@@ -2141,3 +2141,26 @@ button:disabled {
     max-width: 126px !important;
   }
 }
+
+/* v31: vollständiges rechteckiges Firmenlogo ohne Beschnitt */
+.appHeader {
+  align-items: center !important;
+}
+.appLogo {
+  display: block !important;
+  width: 126px !important;
+  height: auto !important;
+  max-height: 82px !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  flex: 0 0 auto !important;
+}
+@media (max-width: 520px) {
+  .appLogo {
+    width: 118px !important;
+    height: auto !important;
+    max-height: 76px !important;
+  }
+}
