@@ -2109,3 +2109,8 @@ button:disabled {
     white-space: nowrap !important;
   }
 }
+
+/* v29: korrekter Abstand zwischen den beiden Aktionsreihen */
+.protocolOutputActions {
+  margin-top: 10px !important;
+}
