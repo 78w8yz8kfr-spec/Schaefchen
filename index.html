@@ -566,17 +566,17 @@
       </section>
 
       <div class="actions protocolStep" data-step="5">
-        <button class="completeButton" onclick="completeProtocol()">
+        <button class="completeButton draftOnlyAction" onclick="completeProtocol()">
           Prüfung abschließen ✓
         </button>
-        <button onclick="saveData(true)">Jetzt speichern</button>
-        <button id="pdfButton" onclick="createPdf()">
+        <button class="draftOnlyAction" onclick="saveData(true)">Jetzt speichern</button>
+        <button id="pdfButton" class="completedOnlyAction hidden" onclick="createPdf()">
           PDF erstellen / teilen
         </button>
-        <button id="printButton" class="secondary" onclick="printProtocol()">
+        <button id="printButton" class="secondary completedOnlyAction hidden" onclick="printProtocol()">
           Drucken
         </button>
-        <button class="danger" onclick="resetData()">Prüfung löschen</button>
+        <button class="danger draftOnlyAction" onclick="resetData()">Prüfung löschen</button>
       </div>
 
       <nav class="stepActions">
