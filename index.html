@@ -1,313 +1,861 @@
 <!doctype html>
 <html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#c01820">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="style.css?v=24">
-  <title>VDE Prüfprotokoll</title>
-</head>
-<body>
-<header class="appHeader">
-  <img src="logo.png" alt="Schaaf-Elektro Logo" class="appLogo">
-  <div class="headerCopy">
-    <h1>VDE Prüfprotokoll</h1>
-    <p>DIN VDE 0100-600 / DIN VDE 0105-100 / DGUV V3</p>
-  </div>
-  <div id="storagePill" class="storagePill"><span></span> Lokal auf diesem Gerät</div>
-</header>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#c01820" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet" href="style.css?v=25" />
+    <title>VDE Prüfprotokoll</title>
+  </head>
+  <body>
+    <header class="appHeader">
+      <img src="logo.png" alt="Schaaf-Elektro Logo" class="appLogo" />
+      <div class="headerCopy">
+        <h1>VDE Prüfprotokoll</h1>
+        <p>DIN VDE 0100-600 / DIN VDE 0105-100 / DGUV V3</p>
+      </div>
+      <div id="storagePill" class="storagePill">
+        <span></span> Lokal auf diesem Gerät
+      </div>
+    </header>
 
-<main id="libraryMain">
-  <section class="workspaceHero">
-    <div>
-      <div class="eyebrow">Lokale Projektablage</div>
-      <h2>Baustellen</h2>
-      <p>Jede Baustelle ist ein eigener Ordner. Prüfungen werden automatisch als Entwurf gespeichert und können jederzeit fortgesetzt werden.</p>
-    </div>
-    <div class="heroActions">
-      <button class="heroSecondary" onclick="openPresetDialog()">⚙️ Voreinstellungen</button>
-      <button onclick="openSiteDialog()">+ Baustelle anlegen</button>
-    </div>
-  </section>
-
-  <section id="siteOverview">
-    <div class="workspaceToolbar">
-      <div id="workspaceStats" class="workspaceStats"></div>
-      <label class="searchField"><span>Baustelle suchen</span><input id="siteSearch" type="search" placeholder="Name, Kunde, Adresse …"></label>
-      <div class="backupTools">
-        <p><b>Datensicherung</b><span>Für Gerätewechsel oder falls Browserdaten gelöscht werden.</span></p>
-        <div id="backupReminder" class="backupReminder hidden"></div>
-        <div class="toolbarButtons">
-          <button class="secondary" onclick="exportBackup()">Alle Daten sichern</button>
-          <button class="secondary" onclick="document.getElementById('backupImport').click()">Sicherung wiederherstellen</button>
-          <input id="backupImport" type="file" accept="application/json,.json" hidden>
+    <main id="libraryMain">
+      <section class="workspaceHero">
+        <div>
+          <div class="eyebrow">Lokale Projektablage</div>
+          <h2>Baustellen</h2>
+          <p>
+            Jede Baustelle ist ein eigener Ordner. Prüfungen werden automatisch
+            als Entwurf gespeichert und können jederzeit fortgesetzt werden.
+          </p>
         </div>
+        <div class="heroActions">
+          <button class="heroSecondary" onclick="openPresetDialog()">
+            ⚙️ Voreinstellungen
+          </button>
+          <button onclick="openSiteDialog()">+ Baustelle anlegen</button>
+        </div>
+      </section>
+
+      <section id="siteOverview">
+        <div class="workspaceToolbar">
+          <div id="workspaceStats" class="workspaceStats"></div>
+          <label class="searchField"
+            ><span>Baustelle suchen</span
+            ><input
+              id="siteSearch"
+              type="search"
+              placeholder="Name, Kunde, Adresse …"
+          /></label>
+          <div class="backupTools">
+            <p>
+              <b>Datensicherung</b
+              ><span
+                >Für Gerätewechsel oder falls Browserdaten gelöscht
+                werden.</span
+              >
+            </p>
+            <div id="backupReminder" class="backupReminder hidden"></div>
+            <div class="toolbarButtons">
+              <button class="secondary" onclick="exportBackup()">
+                Alle Daten sichern
+              </button>
+              <button
+                class="secondary"
+                onclick="document.getElementById('backupImport').click()"
+              >
+                Sicherung wiederherstellen
+              </button>
+              <input
+                id="backupImport"
+                type="file"
+                accept="application/json,.json"
+                hidden
+              />
+            </div>
+          </div>
+        </div>
+        <div id="siteGrid" class="siteGrid"></div>
+      </section>
+
+      <section id="siteDetail" class="hidden">
+        <div class="siteDetailHead">
+          <button class="secondary backButton" onclick="showSiteOverview()">
+            ← Alle Baustellen
+          </button>
+          <div class="siteDetailTitle">
+            <div class="folderMark">▰</div>
+            <div>
+              <div class="eyebrow">Baustellenordner</div>
+              <h2 id="siteDetailName"></h2>
+              <p id="siteDetailMeta"></p>
+            </div>
+          </div>
+          <div class="toolbarButtons">
+            <button class="secondary" onclick="editCurrentSite()">
+              Baustelle bearbeiten
+            </button>
+            <button onclick="openProtocolDialog()">+ Neue Prüfung</button>
+          </div>
+        </div>
+        <div id="protocolGrid" class="protocolGrid"></div>
+      </section>
+    </main>
+
+    <main id="appMain" class="hidden">
+      <section class="editorBar">
+        <button
+          id="editorBackButton"
+          class="secondary backButton"
+          onclick="closeEditor()"
+        >
+          ← Baustellenordner
+        </button>
+        <div class="editorIdentity">
+          <span><b id="editorSiteName"></b> · Prüfprotokoll</span>
+          <input
+            id="protocolTitle"
+            aria-label="Bezeichnung der Prüfung"
+            placeholder="z. B. Erstprüfung · UV EG"
+          />
+        </div>
+        <label class="statusSelect"
+          >Status<select id="protocolStatus">
+            <option value="draft">Entwurf</option>
+            <option value="completed">Abgeschlossen</option>
+          </select></label
+        >
+        <div id="saveState" class="saveState">Gespeichert</div>
+      </section>
+
+      <section id="lockedBanner" class="lockedBanner hidden">
+        <div>
+          <b>Abgeschlossene Prüfung</b
+          ><span id="lockedBannerText"
+            >Dieses Protokoll ist schreibgeschützt.</span
+          >
+        </div>
+        <button
+          id="reopenButton"
+          type="button"
+          onclick="reopenProtocolForEditing()"
+        >
+          Erneut bearbeiten
+        </button>
+      </section>
+
+      <nav class="protocolStepper" aria-label="Prüfabschnitte">
+        <button
+          type="button"
+          class="active"
+          data-step-target="1"
+          onclick="showStep(1)"
+        >
+          <span>1</span><b>Auftrag</b>
+        </button>
+        <button type="button" data-step-target="2" onclick="showStep(2)">
+          <span>2</span><b>Sichtprüfung</b>
+        </button>
+        <button type="button" data-step-target="3" onclick="showStep(3)">
+          <span>3</span><b>Einspeisung</b>
+        </button>
+        <button type="button" data-step-target="4" onclick="showStep(4)">
+          <span>4</span><b>Verteilungen</b>
+        </button>
+        <button type="button" data-step-target="5" onclick="showStep(5)">
+          <span>5</span><b>Abschluss</b>
+        </button>
+      </nav>
+
+      <div id="stepIntro" class="stepIntro">
+        <div>
+          <span id="stepCounter">Schritt 1 von 5</span>
+          <h2 id="stepTitle">Auftrag und Prüfdaten</h2>
+          <p id="stepDescription">Grunddaten zur Baustelle und Prüfart.</p>
+        </div>
+        <div id="stepProgress">0 % ausgefüllt</div>
       </div>
-    </div>
-    <div id="siteGrid" class="siteGrid"></div>
-  </section>
 
-  <section id="siteDetail" class="hidden">
-    <div class="siteDetailHead">
-      <button class="secondary backButton" onclick="showSiteOverview()">← Alle Baustellen</button>
-      <div class="siteDetailTitle">
-        <div class="folderMark">▰</div>
-        <div><div class="eyebrow">Baustellenordner</div><h2 id="siteDetailName"></h2><p id="siteDetailMeta"></p></div>
+      <section class="card protocolStep active" data-step="1">
+        <div class="protocolSectionHead">
+          <span>1</span>
+          <div>
+            <h2>Auftrag und Objekt</h2>
+            <p>
+              Die Baustellendaten sind bereits übernommen und können hier
+              ergänzt werden.
+            </p>
+          </div>
+        </div>
+        <div class="grid">
+          <label
+            >Prüfprotokoll-Nr.<input
+              id="protocolNo"
+              placeholder="z. B. 2026-001"
+          /></label>
+          <label>Kunden-Nr.<input id="customerNo" /></label>
+          <label>Auftrags-Nr.<input id="orderNo" /></label>
+          <label
+            >Blatt<input id="sheetNo" value="1" inputmode="numeric"
+          /></label>
+          <label
+            >von<input id="sheetTotal" value="1" inputmode="numeric"
+          /></label>
+          <label>Auftraggeber<input id="kunde" /></label>
+          <label>Objekt / Anlage<input id="objekt" /></label>
+          <label>Adresse<input id="adresse" /></label>
+          <label>Beginn der Prüfung<input id="datum" type="date" /></label>
+          <label>Beginn Uhrzeit<input id="startTime" type="time" /></label>
+          <label>Ende der Prüfung<input id="endDate" type="date" /></label>
+          <label>Ende Uhrzeit<input id="endTime" type="time" /></label>
+          <label>Prüfer<input id="pruefer" /></label>
+          <label>Firma<input id="firma" /></label>
+          <label
+            >Netzform<select id="netzform">
+              <option>TN-S</option>
+              <option>TN-C-S</option>
+              <option>TN-C</option>
+              <option>TT</option>
+              <option>IT</option>
+            </select></label
+          >
+          <label>Nennspannung<input id="spannung" value="230/400 V" /></label>
+          <label>Frequenz<input id="frequenz" value="50 Hz" /></label>
+          <label>Netzbetreiber<input id="netzbetreiber" /></label>
+        </div>
+        <div id="calibrationStatus" class="calibrationStatus"></div>
+        <div class="formSubhead">Prüfung nach / Regelwerk</div>
+        <div class="checks ruleChecks">
+          <label
+            ><input type="checkbox" id="norm0100600" checked /> DIN VDE
+            0100-600</label
+          >
+          <label
+            ><input type="checkbox" id="norm0105100" /> DIN VDE 0105-100</label
+          >
+          <label><input type="checkbox" id="echeck" /> E-CHECK</label>
+          <label
+            ><input type="checkbox" id="dguv3" checked /> DGUV Vorschrift
+            3</label
+          >
+          <label><input type="checkbox" id="betrsichv" /> BetrSichV</label>
+        </div>
+        <div class="formSubhead">Art der Prüfung</div>
+        <div class="checks">
+          <label
+            ><input type="radio" name="pruefart" id="erst" /> Neuanlage</label
+          >
+          <label
+            ><input type="radio" name="pruefart" id="aenderung" />
+            Änderung</label
+          >
+          <label
+            ><input type="radio" name="pruefart" id="erweiterung" />
+            Erweiterung</label
+          >
+          <label
+            ><input type="radio" name="pruefart" id="wieder" />
+            Wiederholungsprüfung</label
+          >
+          <label
+            ><input type="radio" name="pruefart" id="instandsetzung" />
+            Instandsetzung</label
+          >
+        </div>
+      </section>
+
+      <section class="card protocolStep" data-step="2">
+        <div class="protocolSectionHead">
+          <span>2</span>
+          <div>
+            <h2>Besichtigen und Erproben</h2>
+            <p>Jeden Prüfpunkt mit i.O. oder n.i.O. bewerten.</p>
+          </div>
+        </div>
+        <div id="checks"></div>
+      </section>
+
+      <section class="card hakCard protocolStep" data-step="3">
+        <div class="titleRow sectionHead">
+          <button class="collapseBtn" onclick="toggleHak(this)">▾</button>
+          <h2>Hausanschlusskasten / Einspeisung</h2>
+        </div>
+        <p class="hint">
+          Zuleitung und Absicherung der Anlage. Falls nicht Bestandteil der
+          Prüfung, können die Felder leer bleiben.
+        </p>
+        <div id="hakBody" class="grid">
+          <label
+            >Bezeichnung<input
+              id="hakName"
+              value="Hausanschlusskasten"
+              placeholder="z.B. HAK / Zählerschrank"
+          /></label>
+          <label
+            >Ort<input id="hakPlace" placeholder="z.B. Keller, HAR"
+          /></label>
+          <label
+            >Vorsicherung<input id="hakFuse" placeholder="z.B. NH00 63 A"
+          /></label>
+          <label
+            >Zuleitung kommt von<input
+              id="hakSource"
+              value="Netzbetreiber / HAK"
+              placeholder="z.B. Netzbetreiber"
+          /></label>
+          <label
+            >Kabeltyp Zuleitung
+            <div class="cableCombo">
+              <select id="hakCable" onchange="toggleCableCustom(this)">
+                <option value="">Bitte wählen</option>
+                <option>NYM-J</option>
+                <option>NYM-O</option>
+                <option>NYY-J</option>
+                <option>NYY-O</option>
+                <option>N2XH-J</option>
+                <option>N2XH-O</option>
+                <option>NHXMH-J</option>
+                <option>NHXMH-O</option>
+                <option>H07V-U</option>
+                <option>H07V-K</option>
+                <option>H07RN-F</option>
+                <option>NYCWY</option>
+                <option>J-Y(St)Y</option>
+                <option>J-H(St)H</option>
+                <option>LiYY</option>
+                <option>CAT 7</option>
+                <option>CAT 7A</option>
+                <option>LWL</option>
+                <option value="__custom">
+                  Anderer Kabeltyp / frei eingeben
+                </option></select
+              ><input
+                id="hakCableCustom"
+                class="cableCustom"
+                placeholder="Kabeltyp selbst eingeben"
+                style="display: none"
+              /></div
+          ></label>
+          <label
+            >Adernzahl Zuleitung<select id="hakCores">
+              <option value="">Bitte wählen</option>
+              <option>1</option>
+              <option>2</option>
+              <option>3</option>
+              <option>4</option>
+              <option>5</option>
+              <option>7</option>
+              <option>10</option>
+              <option>12</option>
+              <option>16</option>
+              <option>18</option>
+              <option>24</option>
+              <option>48</option>
+            </select></label
+          >
+          <label
+            >Querschnitt Zuleitung<span class="unitField"
+              ><input
+                id="hakCross"
+                inputmode="decimal"
+                placeholder="z.B. 16"
+              /><span>mm²</span></span
+            ></label
+          >
+        </div>
+      </section>
+
+      <section class="card protocolStep" data-step="3">
+        <div class="protocolSectionHead">
+          <span>3.2</span>
+          <div>
+            <h2>Spannungsfall, Erdung und Potentialausgleich</h2>
+            <p>Nachweise und einbezogene leitfähige Systeme dokumentieren.</p>
+          </div>
+        </div>
+        <div class="grid">
+          <label
+            >Spannungsfall nachgewiesen<span class="unitField"
+              ><input
+                id="voltageDrop"
+                inputmode="decimal"
+                placeholder="z. B. 2,1"
+              /><span>%</span></span
+            ></label
+          >
+          <label
+            ><span id="earthResistanceLabel"
+              >Erdungswiderstand R<sub>E</sub> (falls gemessen)</span
+            ><span class="unitField"
+              ><input id="earthResistance" inputmode="decimal" /><span
+                >Ω</span
+              ></span
+            ></label
+          >
+          <label
+            >Durchgängigkeit Potentialausgleich<span class="unitField"
+              ><input
+                id="paResult"
+                inputmode="decimal"
+                placeholder="≤ 1"
+              /><span>Ω</span></span
+            ></label
+          >
+        </div>
+        <div class="formSubhead">In den Potentialausgleich einbezogen</div>
+        <div class="checks potentialChecks">
+          <label
+            ><input type="checkbox" id="paFoundation" /> Fundamenterder</label
+          >
+          <label><input type="checkbox" id="paRing" /> Ringerder</label>
+          <label
+            ><input type="checkbox" id="paHes" /> Haupterdungsschiene</label
+          >
+          <label
+            ><input type="checkbox" id="paWaterMeter" />
+            Wasserzwischenzähler</label
+          >
+          <label
+            ><input type="checkbox" id="paMainWater" />
+            Hauptwasserleitung</label
+          >
+          <label
+            ><input type="checkbox" id="paMainPe" /> Hauptschutzleiter</label
+          >
+          <label><input type="checkbox" id="paGas" /> Gasinnenleitung</label>
+          <label><input type="checkbox" id="paHeating" /> Heizungsanlage</label>
+          <label><input type="checkbox" id="paClimate" /> Klimaanlage</label>
+          <label><input type="checkbox" id="paLift" /> Aufzugsanlage</label>
+          <label><input type="checkbox" id="paEdv" /> EDV-Anlage</label>
+          <label><input type="checkbox" id="paPhone" /> Telefonanlage</label>
+          <label
+            ><input type="checkbox" id="paLightning" /> Blitzschutzanlage</label
+          >
+          <label
+            ><input type="checkbox" id="paAntenna" /> Antennenanlage / BK</label
+          >
+          <label
+            ><input type="checkbox" id="paBuilding" />
+            Gebäudekonstruktion</label
+          >
+          <label>Sonstiges<input id="paOther" /></label>
+        </div>
+      </section>
+
+      <section class="card protocolStep" data-step="4">
+        <div class="titleRow">
+          <div class="protocolSectionHead compact">
+            <span>4</span>
+            <div>
+              <h2>Verteilungen und Stromkreise</h2>
+              <p>Aufbau in der tatsächlichen Reihenfolge des Verteilers.</p>
+            </div>
+          </div>
+          <button onclick="addUv()">+ Verteilung hinzufügen</button>
+        </div>
+        <div class="structureGuide">
+          <span>Verteilung</span><i>→</i><span>FI/RCD</span><i>→</i
+          ><span>Stromkreis</span>
+        </div>
+        <div class="scopeOptions">
+          <label
+            ><input
+              id="detailedInsulation"
+              type="checkbox"
+              onchange="updateRelevantFields()"
+            /><span
+              ><b>Detaillierte Isolationsmessung erfassen</b
+              ><small
+                >Blendet die Einzelmessungen passend für ein- oder dreiphasige
+                Stromkreise ein und übernimmt sie in das Protokoll.</small
+              ></span
+            ></label
+          >
+        </div>
+        <div id="uvs"></div>
+      </section>
+
+      <section class="card summary protocolStep" data-step="5">
+        <div class="protocolSectionHead">
+          <span>5.1</span>
+          <div>
+            <h2>Automatische Gesamtbewertung</h2>
+            <p>Fehlende oder auffällige Messwerte werden zusammengefasst.</p>
+          </div>
+        </div>
+        <div id="overall" class="overall neutral">Noch keine Bewertung</div>
+        <ul id="overallList"></ul>
+      </section>
+
+      <section class="card protocolStep" data-step="5">
+        <div class="protocolSectionHead">
+          <span>5.2</span>
+          <div>
+            <h2>Mängel, Hinweise und Fotos</h2>
+            <p>Festgestellte Mängel nachvollziehbar dokumentieren.</p>
+          </div>
+        </div>
+        <textarea
+          id="maengel"
+          placeholder="Mängel, Hinweise, Nacharbeiten..."
+        ></textarea>
+        <label class="photo"
+          >Fotos hinzufügen<input
+            id="fotos"
+            type="file"
+            accept="image/*"
+            multiple
+        /></label>
+        <div id="preview"></div>
+      </section>
+
+      <section class="card protocolStep" data-step="5">
+        <div class="protocolSectionHead">
+          <span>5.3</span>
+          <div>
+            <h2>Unterschrift Prüfer</h2>
+            <p>Direkt auf dem Gerät unterschreiben.</p>
+          </div>
+        </div>
+        <canvas id="sig" width="700" height="220"></canvas>
+        <button onclick="clearSig()">Unterschrift löschen</button>
+      </section>
+
+      <section class="card result protocolStep" data-step="5">
+        <div class="protocolSectionHead">
+          <span>5.4</span>
+          <div>
+            <h2>Ergebnis und Fertigstellung</h2>
+            <p>
+              Fachliche Schlussbewertung festlegen und Protokoll abschließen.
+            </p>
+          </div>
+        </div>
+        <select id="ergebnis">
+          <option>Anlage ist in Ordnung</option>
+          <option>Anlage ist mit Mängeln betriebsbereit</option>
+          <option>Anlage ist nicht betriebsbereit</option>
+        </select>
+        <label
+          >Prüfplakette<select id="plakette">
+            <option value="">Nicht bewertet</option>
+            <option value="ja">Ja – angebracht</option>
+            <option value="nein">Nein</option>
+          </select></label
+        >
+        <label
+          >Nächste Prüfung empfohlen bis<input id="next" type="date"
+        /></label>
+        <div class="formSubhead">Zusätzliche PDF-Ausgabe</div>
+        <div class="scopeOptions outputOptions">
+          <label
+            ><input id="includeCircuitDirectory" type="checkbox" /><span
+              ><b>Stromkreisverzeichnis ausgeben</b
+              ><small
+                >Fügt der PDF eine eigene, übersichtliche Seite für die
+                Verteilung hinzu.</small
+              ></span
+            ></label
+          >
+        </div>
+      </section>
+
+      <div class="actions protocolStep" data-step="5">
+        <button class="completeButton" onclick="completeProtocol()">
+          Prüfung abschließen ✓
+        </button>
+        <button onclick="saveData(true)">Jetzt speichern</button>
+        <button id="pdfButton" onclick="createPdf()">
+          PDF erstellen / teilen
+        </button>
+        <button id="printButton" class="secondary" onclick="printProtocol()">
+          Drucken
+        </button>
+        <button class="danger" onclick="resetData()">Prüfung löschen</button>
       </div>
-      <div class="toolbarButtons">
-        <button class="secondary" onclick="editCurrentSite()">Baustelle bearbeiten</button>
-        <button onclick="openProtocolDialog()">+ Neue Prüfung</button>
-      </div>
-    </div>
-    <div id="protocolGrid" class="protocolGrid"></div>
-  </section>
-</main>
 
-<main id="appMain" class="hidden">
-  <section class="editorBar">
-    <button id="editorBackButton" class="secondary backButton" onclick="closeEditor()">← Baustellenordner</button>
-    <div class="editorIdentity">
-      <span><b id="editorSiteName"></b> · Prüfprotokoll</span>
-      <input id="protocolTitle" aria-label="Bezeichnung der Prüfung" placeholder="z. B. Erstprüfung · UV EG">
-    </div>
-    <label class="statusSelect">Status<select id="protocolStatus"><option value="draft">Entwurf</option><option value="completed">Abgeschlossen</option></select></label>
-    <div id="saveState" class="saveState">Gespeichert</div>
-  </section>
+      <nav class="stepActions">
+        <button
+          id="prevStep"
+          type="button"
+          class="secondary"
+          onclick="changeStep(-1)"
+        >
+          ← Zurück
+        </button>
+        <span>Änderungen werden automatisch gespeichert</span>
+        <button id="nextStep" type="button" onclick="changeStep(1)">
+          Weiter →
+        </button>
+      </nav>
+    </main>
+    <!-- Kabeltypen werden jetzt als Auswahlfeld verwendet. -->
 
-  <section id="lockedBanner" class="lockedBanner hidden"><div><b>Abgeschlossene Prüfung</b><span id="lockedBannerText">Dieses Protokoll ist schreibgeschützt.</span></div><button id="reopenButton" type="button" onclick="reopenProtocolForEditing()">Erneut bearbeiten</button></section>
+    <div id="printReport" aria-hidden="true"></div>
 
-  <nav class="protocolStepper" aria-label="Prüfabschnitte">
-    <button type="button" class="active" data-step-target="1" onclick="showStep(1)"><span>1</span><b>Auftrag</b></button>
-    <button type="button" data-step-target="2" onclick="showStep(2)"><span>2</span><b>Sichtprüfung</b></button>
-    <button type="button" data-step-target="3" onclick="showStep(3)"><span>3</span><b>Einspeisung</b></button>
-    <button type="button" data-step-target="4" onclick="showStep(4)"><span>4</span><b>Verteilungen</b></button>
-    <button type="button" data-step-target="5" onclick="showStep(5)"><span>5</span><b>Abschluss</b></button>
-  </nav>
+    <dialog id="siteDialog" class="appDialog">
+      <form id="siteForm" method="dialog">
+        <div class="dialogHead">
+          <div>
+            <div class="eyebrow">Baustellenordner</div>
+            <h2 id="siteDialogTitle">Baustelle anlegen</h2>
+          </div>
+          <button
+            type="button"
+            class="iconButton secondary"
+            onclick="closeSiteDialog()"
+            aria-label="Schließen"
+          >
+            ×
+          </button>
+        </div>
+        <input id="siteEditId" type="hidden" />
+        <div class="grid">
+          <label
+            >Baustellenname *<input
+              id="siteName"
+              required
+              placeholder="z. B. Neubau Familie Müller"
+          /></label>
+          <label
+            >Auftragsnummer<input id="siteOrder" placeholder="z. B. 2026-0142"
+          /></label>
+          <label
+            >Auftraggeber<input id="siteCustomer" placeholder="Name / Firma"
+          /></label>
+          <label
+            >Adresse<input id="siteAddress" placeholder="Straße, PLZ Ort"
+          /></label>
+        </div>
+        <label
+          >Notiz<textarea
+            id="siteNote"
+            placeholder="Ansprechpartner, Zugang, Besonderheiten …"
+          ></textarea>
+        </label>
+        <div class="dialogActions">
+          <button type="button" class="secondary" onclick="closeSiteDialog()">
+            Abbrechen</button
+          ><button type="submit">Baustelle speichern</button>
+        </div>
+      </form>
+    </dialog>
 
-  <div id="stepIntro" class="stepIntro"><div><span id="stepCounter">Schritt 1 von 5</span><h2 id="stepTitle">Auftrag und Prüfdaten</h2><p id="stepDescription">Grunddaten zur Baustelle und Prüfart.</p></div><div id="stepProgress">0 % ausgefüllt</div></div>
+    <dialog id="protocolDialog" class="appDialog">
+      <form id="protocolForm" method="dialog">
+        <div class="dialogHead">
+          <div>
+            <div class="eyebrow">Neue Datei im Baustellenordner</div>
+            <h2>Prüfung anlegen</h2>
+          </div>
+          <button
+            type="button"
+            class="iconButton secondary"
+            onclick="closeProtocolDialog()"
+            aria-label="Schließen"
+          >
+            ×
+          </button>
+        </div>
+        <div class="grid">
+          <label
+            >Geprüfte Anlage / Verteilung *<input
+              id="newProtocolTitle"
+              required
+              placeholder="z. B. UV EG, Hauptverteilung oder Wohnung 3"
+            /><small
+              >Die App erstellt daraus automatisch eine Bezeichnung wie
+              „Erstprüfung · UV EG“.</small
+            ></label
+          >
+          <label>Prüfdatum<input id="newProtocolDate" type="date" /></label>
+          <label
+            >Prüfart<select id="newProtocolType">
+              <option value="erst">Neuanlage</option>
+              <option value="wieder">Wiederholungsprüfung</option>
+              <option value="aenderung">Änderung</option>
+              <option value="erweiterung">Erweiterung</option>
+              <option value="instandsetzung">Instandsetzung</option>
+            </select></label
+          >
+        </div>
+        <div id="protocolDeviceHint" class="presetHint">
+          Prüfgerät aus den Voreinstellungen wird übernommen.
+        </div>
+        <div class="dialogActions">
+          <button
+            type="button"
+            class="secondary"
+            onclick="closeProtocolDialog()"
+          >
+            Abbrechen</button
+          ><button type="submit">Prüfung beginnen</button>
+        </div>
+      </form>
+    </dialog>
 
-  <section class="card protocolStep active" data-step="1">
-    <div class="protocolSectionHead"><span>1</span><div><h2>Auftrag und Objekt</h2><p>Die Baustellendaten sind bereits übernommen und können hier ergänzt werden.</p></div></div>
-    <div class="grid">
-      <label>Prüfprotokoll-Nr.<input id="protocolNo" placeholder="z. B. 2026-001"></label>
-      <label>Kunden-Nr.<input id="customerNo"></label>
-      <label>Auftrags-Nr.<input id="orderNo"></label>
-      <label>Blatt<input id="sheetNo" value="1" inputmode="numeric"></label>
-      <label>von<input id="sheetTotal" value="1" inputmode="numeric"></label>
-      <label>Auftraggeber<input id="kunde"></label>
-      <label>Objekt / Anlage<input id="objekt"></label>
-      <label>Adresse<input id="adresse"></label>
-      <label>Beginn der Prüfung<input id="datum" type="date"></label>
-      <label>Beginn Uhrzeit<input id="startTime" type="time"></label>
-      <label>Ende der Prüfung<input id="endDate" type="date"></label>
-      <label>Ende Uhrzeit<input id="endTime" type="time"></label>
-      <label>Prüfer<input id="pruefer"></label>
-      <label>Firma<input id="firma"></label>
-      <label>Netzform<select id="netzform"><option>TN-S</option><option>TN-C-S</option><option>TN-C</option><option>TT</option><option>IT</option></select></label>
-      <label>Nennspannung<input id="spannung" value="230/400 V"></label>
-      <label>Frequenz<input id="frequenz" value="50 Hz"></label>
-      <label>Netzbetreiber<input id="netzbetreiber"></label>
-    </div>
-    <div id="calibrationStatus" class="calibrationStatus"></div>
-    <div class="formSubhead">Prüfung nach / Regelwerk</div>
-    <div class="checks ruleChecks">
-      <label><input type="checkbox" id="norm0100600" checked> DIN VDE 0100-600</label>
-      <label><input type="checkbox" id="norm0105100"> DIN VDE 0105-100</label>
-      <label><input type="checkbox" id="echeck"> E-CHECK</label>
-      <label><input type="checkbox" id="dguv3" checked> DGUV Vorschrift 3</label>
-      <label><input type="checkbox" id="betrsichv"> BetrSichV</label>
-    </div>
-    <div class="formSubhead">Art der Prüfung</div>
-    <div class="checks">
-      <label><input type="radio" name="pruefart" id="erst"> Neuanlage</label>
-      <label><input type="radio" name="pruefart" id="aenderung"> Änderung</label>
-      <label><input type="radio" name="pruefart" id="erweiterung"> Erweiterung</label>
-      <label><input type="radio" name="pruefart" id="wieder"> Wiederholungsprüfung</label>
-      <label><input type="radio" name="pruefart" id="instandsetzung"> Instandsetzung</label>
-    </div>
-  </section>
+    <dialog id="presetDialog" class="appDialog presetDialog">
+      <form id="presetForm" method="dialog">
+        <div class="dialogHead">
+          <div>
+            <div class="eyebrow">Lokale Voreinstellungen</div>
+            <h2>Firma, Prüfer und Prüfgerät</h2>
+          </div>
+          <button
+            type="button"
+            class="iconButton secondary"
+            onclick="closePresetDialog()"
+            aria-label="Schließen"
+          >
+            ×
+          </button>
+        </div>
+        <p class="hint">
+          Diese Angaben werden einmalig auf diesem Gerät gespeichert und
+          automatisch in jede neue Prüfung übernommen.
+        </p>
+        <section class="presetSection">
+          <h3>Prüfgerät</h3>
+          <p>
+            Das verwendete Messgerät wird vor der Prüfung festgelegt und im PDF
+            dokumentiert.
+          </p>
+          <div class="grid">
+            <label
+              >Messgerät nach VDE<input
+                id="gVde"
+                placeholder="z. B. DIN VDE 0413"
+            /></label>
+            <label
+              >Hersteller<input
+                id="gHersteller"
+                placeholder="z. B. Gossen Metrawatt"
+            /></label>
+            <label>Typ<input id="gTyp" placeholder="z. B. PROFITEST" /></label>
+            <label>Seriennummer<input id="gSerie" /></label>
+            <label
+              >Kalibrierung gültig bis<input id="gKal" type="date"
+            /></label>
+          </div>
+          <details class="extraDevices">
+            <summary>Weitere Messgeräte (optional)</summary>
+            <div class="grid">
+              <label>Messgerät 2 – Hersteller<input id="g2Hersteller" /></label
+              ><label>Messgerät 2 – Typ<input id="g2Typ" /></label
+              ><label>Messgerät 2 – Seriennummer<input id="g2Serie" /></label
+              ><label
+                >Messgerät 2 – Kalibrierung bis<input id="g2Kal" type="date"
+              /></label>
+              <label>Messgerät 3 – Hersteller<input id="g3Hersteller" /></label
+              ><label>Messgerät 3 – Typ<input id="g3Typ" /></label
+              ><label>Messgerät 3 – Seriennummer<input id="g3Serie" /></label
+              ><label
+                >Messgerät 3 – Kalibrierung bis<input id="g3Kal" type="date"
+              /></label>
+            </div>
+          </details>
+        </section>
+        <section class="presetSection">
+          <h3>Firmendaten und Prüfer</h3>
+          <p>Die Firmendaten erscheinen automatisch in der PDF-Fußzeile.</p>
+          <div class="grid">
+            <label
+              >Firmenname<input id="firmName" value="Schaaf-Elektro GmbH"
+            /></label>
+            <label
+              >Straße / Hausnummer<input
+                id="firmStreet"
+                value="Dresdner Str. 30b"
+            /></label>
+            <label>PLZ / Ort<input id="firmCity" value="04720 Döbeln" /></label>
+            <label>Telefon<input id="firmTel" value="03431 / 717830" /></label>
+            <label>Fax<input id="firmFax" value="03431 / 717839" /></label>
+            <label
+              >Mobil<input id="firmMobile" value="0160 / 90867501"
+            /></label>
+            <label
+              >E-Mail<input id="firmEmail" value="b.spallek@schaaf-elektro.de"
+            /></label>
+            <label
+              >Geschäftsführer<input
+                id="firmCEO"
+                value="Steffen Scheer, Torsten Schaaf"
+            /></label>
+            <label
+              >Registergericht<input
+                id="firmCourt"
+                value="Amtsgericht Chemnitz"
+            /></label>
+            <label>HRB<input id="firmHRB" value="HRB 103539" /></label>
+            <label
+              >Prüfer Standard<input
+                id="defaultPruefer"
+                placeholder="Name Prüfer"
+            /></label>
+            <label
+              >Verantwortlicher Meister<input
+                id="masterName"
+                placeholder="Name Meister"
+            /></label>
+          </div>
+          <div id="logoPreview" class="logoPreview fixedLogo">
+            <img src="logo.png" alt="Schaaf-Elektro Logo" /><span
+              >Fest hinterlegtes Firmenlogo</span
+            >
+          </div>
+        </section>
+        <div class="dialogActions">
+          <button type="button" class="secondary" onclick="closePresetDialog()">
+            Abbrechen</button
+          ><button type="submit">Voreinstellungen speichern</button>
+        </div>
+      </form>
+    </dialog>
 
-  <section class="card protocolStep" data-step="2">
-    <div class="protocolSectionHead"><span>2</span><div><h2>Besichtigen und Erproben</h2><p>Jeden Prüfpunkt mit i.O. oder n.i.O. bewerten.</p></div></div>
-    <div id="checks"></div>
-  </section>
+    <dialog id="completionDialog" class="appDialog completionDialog">
+      <form method="dialog">
+        <div class="dialogHead">
+          <div>
+            <div class="eyebrow">Abschlusskontrolle</div>
+            <h2>Prüfung abschließen</h2>
+          </div>
+          <button
+            type="button"
+            class="iconButton secondary"
+            onclick="closeCompletionDialog()"
+            aria-label="Schließen"
+          >
+            ×
+          </button>
+        </div>
+        <p id="completionSummary" class="hint"></p>
+        <div id="completionIssueList" class="completionIssueList"></div>
+        <div class="dialogActions">
+          <button
+            type="button"
+            class="secondary"
+            onclick="closeCompletionDialog()"
+          >
+            Angaben prüfen</button
+          ><button
+            id="confirmCompletionButton"
+            type="button"
+            onclick="confirmProtocolCompletion()"
+          >
+            Trotzdem abschließen
+          </button>
+        </div>
+      </form>
+    </dialog>
 
-  <section class="card hakCard protocolStep" data-step="3">
-    <div class="titleRow sectionHead"><button class="collapseBtn" onclick="toggleHak(this)">▾</button><h2>Hausanschlusskasten / Einspeisung</h2></div>
-    <p class="hint">Zuleitung und Absicherung der Anlage. Falls nicht Bestandteil der Prüfung, können die Felder leer bleiben.</p>
-    <div id="hakBody" class="grid">
-      <label>Bezeichnung<input id="hakName" value="Hausanschlusskasten" placeholder="z.B. HAK / Zählerschrank"></label>
-      <label>Ort<input id="hakPlace" placeholder="z.B. Keller, HAR"></label>
-      <label>Vorsicherung<input id="hakFuse" placeholder="z.B. NH00 63 A"></label>
-      <label>Zuleitung kommt von<input id="hakSource" value="Netzbetreiber / HAK" placeholder="z.B. Netzbetreiber"></label>
-      <label>Kabeltyp Zuleitung<div class="cableCombo"><select id="hakCable" onchange="toggleCableCustom(this)"><option value="">Bitte wählen</option><option>NYM-J</option><option>NYM-O</option><option>NYY-J</option><option>NYY-O</option><option>N2XH-J</option><option>N2XH-O</option><option>NHXMH-J</option><option>NHXMH-O</option><option>H07V-U</option><option>H07V-K</option><option>H07RN-F</option><option>NYCWY</option><option>J-Y(St)Y</option><option>J-H(St)H</option><option>LiYY</option><option>CAT 7</option><option>CAT 7A</option><option>LWL</option><option value="__custom">Anderer Kabeltyp / frei eingeben</option></select><input id="hakCableCustom" class="cableCustom" placeholder="Kabeltyp selbst eingeben" style="display:none"></div></label>
-      <label>Adernzahl Zuleitung<select id="hakCores"><option value="">Bitte wählen</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>7</option><option>10</option><option>12</option><option>16</option><option>18</option><option>24</option><option>48</option></select></label>
-      <label>Querschnitt Zuleitung<span class="unitField"><input id="hakCross" inputmode="decimal" placeholder="z.B. 16"><span>mm²</span></span></label>
-    </div>
-  </section>
-
-  <section class="card protocolStep" data-step="3">
-    <div class="protocolSectionHead"><span>3.2</span><div><h2>Spannungsfall, Erdung und Potentialausgleich</h2><p>Nachweise und einbezogene leitfähige Systeme dokumentieren.</p></div></div>
-    <div class="grid">
-      <label>Spannungsfall nachgewiesen<span class="unitField"><input id="voltageDrop" inputmode="decimal" placeholder="z. B. 2,1"><span>%</span></span></label>
-      <label>Erdungswiderstand R<sub>E</sub><span class="unitField"><input id="earthResistance" inputmode="decimal"><span>Ω</span></span></label>
-      <label>Durchgängigkeit Potentialausgleich<span class="unitField"><input id="paResult" inputmode="decimal" placeholder="≤ 1"><span>Ω</span></span></label>
-    </div>
-    <div class="formSubhead">In den Potentialausgleich einbezogen</div>
-    <div class="checks potentialChecks">
-      <label><input type="checkbox" id="paFoundation"> Fundamenterder</label>
-      <label><input type="checkbox" id="paRing"> Ringerder</label>
-      <label><input type="checkbox" id="paHes"> Haupterdungsschiene</label>
-      <label><input type="checkbox" id="paWaterMeter"> Wasserzwischenzähler</label>
-      <label><input type="checkbox" id="paMainWater"> Hauptwasserleitung</label>
-      <label><input type="checkbox" id="paMainPe"> Hauptschutzleiter</label>
-      <label><input type="checkbox" id="paGas"> Gasinnenleitung</label>
-      <label><input type="checkbox" id="paHeating"> Heizungsanlage</label>
-      <label><input type="checkbox" id="paClimate"> Klimaanlage</label>
-      <label><input type="checkbox" id="paLift"> Aufzugsanlage</label>
-      <label><input type="checkbox" id="paEdv"> EDV-Anlage</label>
-      <label><input type="checkbox" id="paPhone"> Telefonanlage</label>
-      <label><input type="checkbox" id="paLightning"> Blitzschutzanlage</label>
-      <label><input type="checkbox" id="paAntenna"> Antennenanlage / BK</label>
-      <label><input type="checkbox" id="paBuilding"> Gebäudekonstruktion</label>
-      <label>Sonstiges<input id="paOther"></label>
-    </div>
-  </section>
-
-  <section class="card protocolStep" data-step="4">
-    <div class="titleRow"><div class="protocolSectionHead compact"><span>4</span><div><h2>Verteilungen und Stromkreise</h2><p>Aufbau in der tatsächlichen Reihenfolge des Verteilers.</p></div></div><button onclick="addUv()">+ Verteilung hinzufügen</button></div>
-    <div class="structureGuide"><span>Verteilung</span><i>→</i><span>FI/RCD</span><i>→</i><span>Stromkreis</span></div>
-    <div id="uvs"></div>
-  </section>
-
-  <section class="card summary protocolStep" data-step="5">
-    <div class="protocolSectionHead"><span>5.1</span><div><h2>Automatische Gesamtbewertung</h2><p>Fehlende oder auffällige Messwerte werden zusammengefasst.</p></div></div>
-    <div id="overall" class="overall neutral">Noch keine Bewertung</div>
-    <ul id="overallList"></ul>
-  </section>
-
-  <section class="card protocolStep" data-step="5">
-    <div class="protocolSectionHead"><span>5.2</span><div><h2>Mängel, Hinweise und Fotos</h2><p>Festgestellte Mängel nachvollziehbar dokumentieren.</p></div></div>
-    <textarea id="maengel" placeholder="Mängel, Hinweise, Nacharbeiten..."></textarea>
-    <label class="photo">Fotos hinzufügen<input id="fotos" type="file" accept="image/*" multiple></label>
-    <div id="preview"></div>
-  </section>
-
-  <section class="card protocolStep" data-step="5">
-    <div class="protocolSectionHead"><span>5.3</span><div><h2>Unterschrift Prüfer</h2><p>Direkt auf dem Gerät unterschreiben.</p></div></div>
-    <canvas id="sig" width="700" height="220"></canvas>
-    <button onclick="clearSig()">Unterschrift löschen</button>
-  </section>
-
-  <section class="card result protocolStep" data-step="5">
-    <div class="protocolSectionHead"><span>5.4</span><div><h2>Ergebnis und Fertigstellung</h2><p>Fachliche Schlussbewertung festlegen und Protokoll abschließen.</p></div></div>
-    <select id="ergebnis"><option>Anlage ist in Ordnung</option><option>Anlage ist mit Mängeln betriebsbereit</option><option>Anlage ist nicht betriebsbereit</option></select>
-    <label>Prüfplakette<select id="plakette"><option value="">Nicht bewertet</option><option value="ja">Ja – angebracht</option><option value="nein">Nein</option></select></label>
-    <label>Nächste Prüfung empfohlen bis<input id="next" type="date"></label>
-  </section>
-
-  <div class="actions protocolStep" data-step="5">
-    <button class="completeButton" onclick="completeProtocol()">Prüfung abschließen ✓</button>
-    <button onclick="saveData(true)">Jetzt speichern</button>
-    <button id="pdfButton" onclick="createPdf()">PDF erstellen / teilen</button>
-    <button id="printButton" class="secondary" onclick="printProtocol()">Drucken</button>
-    <button class="danger" onclick="resetData()">Prüfung löschen</button>
-  </div>
-
-  <nav class="stepActions">
-    <button id="prevStep" type="button" class="secondary" onclick="changeStep(-1)">← Zurück</button>
-    <span>Änderungen werden automatisch gespeichert</span>
-    <button id="nextStep" type="button" onclick="changeStep(1)">Weiter →</button>
-  </nav>
-</main>
-<!-- Kabeltypen werden jetzt als Auswahlfeld verwendet. -->
-
-<div id="printReport" aria-hidden="true"></div>
-
-<dialog id="siteDialog" class="appDialog">
-  <form id="siteForm" method="dialog">
-    <div class="dialogHead"><div><div class="eyebrow">Baustellenordner</div><h2 id="siteDialogTitle">Baustelle anlegen</h2></div><button type="button" class="iconButton secondary" onclick="closeSiteDialog()" aria-label="Schließen">×</button></div>
-    <input id="siteEditId" type="hidden">
-    <div class="grid">
-      <label>Baustellenname *<input id="siteName" required placeholder="z. B. Neubau Familie Müller"></label>
-      <label>Auftragsnummer<input id="siteOrder" placeholder="z. B. 2026-0142"></label>
-      <label>Auftraggeber<input id="siteCustomer" placeholder="Name / Firma"></label>
-      <label>Adresse<input id="siteAddress" placeholder="Straße, PLZ Ort"></label>
-    </div>
-    <label>Notiz<textarea id="siteNote" placeholder="Ansprechpartner, Zugang, Besonderheiten …"></textarea></label>
-    <div class="dialogActions"><button type="button" class="secondary" onclick="closeSiteDialog()">Abbrechen</button><button type="submit">Baustelle speichern</button></div>
-  </form>
-</dialog>
-
-<dialog id="protocolDialog" class="appDialog">
-  <form id="protocolForm" method="dialog">
-    <div class="dialogHead"><div><div class="eyebrow">Neue Datei im Baustellenordner</div><h2>Prüfung anlegen</h2></div><button type="button" class="iconButton secondary" onclick="closeProtocolDialog()" aria-label="Schließen">×</button></div>
-    <div class="grid">
-      <label>Geprüfte Anlage / Verteilung *<input id="newProtocolTitle" required placeholder="z. B. UV EG, Hauptverteilung oder Wohnung 3"><small>Die App erstellt daraus automatisch eine Bezeichnung wie „Erstprüfung · UV EG“.</small></label>
-      <label>Prüfdatum<input id="newProtocolDate" type="date"></label>
-      <label>Prüfart<select id="newProtocolType"><option value="erst">Neuanlage</option><option value="wieder">Wiederholungsprüfung</option><option value="aenderung">Änderung</option><option value="erweiterung">Erweiterung</option><option value="instandsetzung">Instandsetzung</option></select></label>
-    </div>
-    <div id="protocolDeviceHint" class="presetHint">Prüfgerät aus den Voreinstellungen wird übernommen.</div>
-    <div class="dialogActions"><button type="button" class="secondary" onclick="closeProtocolDialog()">Abbrechen</button><button type="submit">Prüfung beginnen</button></div>
-  </form>
-</dialog>
-
-<dialog id="presetDialog" class="appDialog presetDialog">
-  <form id="presetForm" method="dialog">
-    <div class="dialogHead"><div><div class="eyebrow">Lokale Voreinstellungen</div><h2>Firma, Prüfer und Prüfgerät</h2></div><button type="button" class="iconButton secondary" onclick="closePresetDialog()" aria-label="Schließen">×</button></div>
-    <p class="hint">Diese Angaben werden einmalig auf diesem Gerät gespeichert und automatisch in jede neue Prüfung übernommen.</p>
-    <section class="presetSection">
-      <h3>Prüfgerät</h3>
-      <p>Das verwendete Messgerät wird vor der Prüfung festgelegt und im PDF dokumentiert.</p>
-      <div class="grid">
-        <label>Messgerät nach VDE<input id="gVde" placeholder="z. B. DIN VDE 0413"></label>
-        <label>Hersteller<input id="gHersteller" placeholder="z. B. Gossen Metrawatt"></label>
-        <label>Typ<input id="gTyp" placeholder="z. B. PROFITEST"></label>
-        <label>Seriennummer<input id="gSerie"></label>
-        <label>Kalibrierung gültig bis<input id="gKal" type="date"></label>
-      </div>
-      <details class="extraDevices"><summary>Weitere Messgeräte (optional)</summary><div class="grid">
-        <label>Messgerät 2 – Hersteller<input id="g2Hersteller"></label><label>Messgerät 2 – Typ<input id="g2Typ"></label><label>Messgerät 2 – Seriennummer<input id="g2Serie"></label><label>Messgerät 2 – Kalibrierung bis<input id="g2Kal" type="date"></label>
-        <label>Messgerät 3 – Hersteller<input id="g3Hersteller"></label><label>Messgerät 3 – Typ<input id="g3Typ"></label><label>Messgerät 3 – Seriennummer<input id="g3Serie"></label><label>Messgerät 3 – Kalibrierung bis<input id="g3Kal" type="date"></label>
-      </div></details>
-    </section>
-    <section class="presetSection">
-      <h3>Firmendaten und Prüfer</h3>
-      <p>Die Firmendaten erscheinen automatisch in der PDF-Fußzeile.</p>
-      <div class="grid">
-        <label>Firmenname<input id="firmName" value="Schaaf-Elektro GmbH"></label>
-        <label>Straße / Hausnummer<input id="firmStreet" value="Dresdner Str. 30b"></label>
-        <label>PLZ / Ort<input id="firmCity" value="04720 Döbeln"></label>
-        <label>Telefon<input id="firmTel" value="03431 / 717830"></label>
-        <label>Fax<input id="firmFax" value="03431 / 717839"></label>
-        <label>Mobil<input id="firmMobile" value="0160 / 90867501"></label>
-        <label>E-Mail<input id="firmEmail" value="b.spallek@schaaf-elektro.de"></label>
-        <label>Geschäftsführer<input id="firmCEO" value="Steffen Scheer, Torsten Schaaf"></label>
-        <label>Registergericht<input id="firmCourt" value="Amtsgericht Chemnitz"></label>
-        <label>HRB<input id="firmHRB" value="HRB 103539"></label>
-        <label>Prüfer Standard<input id="defaultPruefer" placeholder="Name Prüfer"></label>
-        <label>Verantwortlicher Meister<input id="masterName" placeholder="Name Meister"></label>
-      </div>
-      <div id="logoPreview" class="logoPreview fixedLogo"><img src="logo.png" alt="Schaaf-Elektro Logo"><span>Fest hinterlegtes Firmenlogo</span></div>
-    </section>
-    <div class="dialogActions"><button type="button" class="secondary" onclick="closePresetDialog()">Abbrechen</button><button type="submit">Voreinstellungen speichern</button></div>
-  </form>
-</dialog>
-
-<dialog id="completionDialog" class="appDialog completionDialog">
-  <form method="dialog">
-    <div class="dialogHead"><div><div class="eyebrow">Abschlusskontrolle</div><h2>Prüfung abschließen</h2></div><button type="button" class="iconButton secondary" onclick="closeCompletionDialog()" aria-label="Schließen">×</button></div>
-    <p id="completionSummary" class="hint"></p>
-    <div id="completionIssueList" class="completionIssueList"></div>
-    <div class="dialogActions"><button type="button" class="secondary" onclick="closeCompletionDialog()">Angaben prüfen</button><button id="confirmCompletionButton" type="button" onclick="confirmProtocolCompletion()">Trotzdem abschließen</button></div>
-  </form>
-</dialog>
-
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
-<script src="jspdf.umd.min.js?v=21"></script>
-<script src="jspdf.plugin.autotable.min.js?v=21"></script>
-<script src="script.js?v=24"></script>
-</body>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="jspdf.umd.min.js?v=21"></script>
+    <script src="jspdf.plugin.autotable.min.js?v=21"></script>
+    <script src="script.js?v=25"></script>
+  </body>
 </html>
