@@ -2085,3 +2085,27 @@ button:disabled {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
+
+/* v28: Ausgabeaktionen immer zweispaltig */
+.protocolOutputActions {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) !important;
+  gap: 7px !important;
+  width: 100% !important;
+}
+.protocolOutputActions button {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+@media (max-width: 520px) {
+  .protocolOutputActions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) !important;
+  }
+  .protocolOutputActions button {
+    font-size: 11px !important;
+    padding: 9px 6px !important;
+    white-space: nowrap !important;
+  }
+}
