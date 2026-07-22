@@ -1,0 +1,44 @@
+name: Fix Button Row Gap
+
+on:
+  push:
+    paths:
+      - .github/workflows/fix-button-row-gap.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Abstand zwischen Button-Reihen korrigieren
+        run: |
+          cat >> style.css <<'CSS'
+
+          /* v29: korrekter Abstand zwischen den beiden Aktionsreihen */
+          .protocolOutputActions {
+            margin-top: 10px !important;
+          }
+          CSS
+
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('style.css?v=28', 'style.css?v=29')
+          s = s.replace('style.css?v=27', 'style.css?v=29')
+          s = s.replace('style.css?v=26', 'style.css?v=29')
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Änderungen speichern
+        run: |
+          rm .github/workflows/fix-button-row-gap.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add style.css index.html .github/workflows/fix-button-row-gap.yml
+          git commit -m "Abstand zwischen Button-Reihen korrigieren"
+          git push
