@@ -1,8 +1,8 @@
 const LEGACY_STORAGE = "vde-protokoll-v15-sichtbarkeit-reihenfolge";
 const DB_NAME = "schaefchen-vde-local";
 const DB_VERSION = 1;
-const APP_VERSION = 25;
-const logoData = "logo.png";
+const APP_VERSION = 26;
+const logoData = "logo.png?v=26";
 const fields = [
   "protocolNo",
   "customerNo",
@@ -1164,7 +1164,7 @@ function updateLogoPreview() {
   const p = document.getElementById("logoPreview");
   if (p)
     p.innerHTML =
-      '<img src="logo.png" alt="Schaaf-Elektro Logo"><span>Fest hinterlegtes Firmenlogo</span>';
+      '<img src="logo.png?v=26" alt="Schaaf-Elektro GmbH Logo"><span>Fest hinterlegtes Firmenlogo</span>';
 }
 function initSettings() {
   updateLogoPreview();
@@ -1488,14 +1488,21 @@ async function finalizeProtocolCompletion() {
     await dbPut("protocols", record);
     currentProtocolRecord = record;
   }
-  showToast("Prüfung abgeschlossen und gespeichert");
-  setTimeout(() => closeEditor(), 500);
+  setEditorLocked(true);
+  showStep(5);
+  showToast("Prüfung abgeschlossen. PDF und Drucken sind jetzt verfügbar.");
 }
 function setEditorLocked(locked) {
   const app = document.getElementById("appMain"),
     banner = document.getElementById("lockedBanner");
   app.classList.toggle("isLocked", locked);
   banner.classList.toggle("hidden", !locked);
+  app
+    .querySelectorAll(".draftOnlyAction")
+    .forEach((element) => element.classList.toggle("hidden", locked));
+  app
+    .querySelectorAll(".completedOnlyAction")
+    .forEach((element) => element.classList.toggle("hidden", !locked));
   if (locked) {
     const stamp =
       currentProtocolRecord &&
@@ -2188,15 +2195,16 @@ async function createPdf() {
       y = ((doc.lastAutoTable && doc.lastAutoTable.finalY) || y) + 5;
     };
     const logo = pdfImageData(document.querySelector(".appLogo"));
-    if (logo) doc.addImage(logo, "PNG", margin, 7, 38, 14, undefined, "FAST");
+    const titleX = logo ? 34 : margin;
+    if (logo) doc.addImage(logo, "PNG", margin, 4, 20, 20, undefined, "FAST");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(19);
     doc.setTextColor(32, 37, 43);
-    doc.text("VDE Prüfprotokoll", logo ? 53 : margin, 13);
+    doc.text("VDE Prüfprotokoll", titleX, 13);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(102, 120, 138);
-    doc.text(standards, logo ? 53 : margin, 19);
+    doc.text(standards, titleX, 19);
     doc.setFontSize(8);
     doc.setTextColor(32, 37, 43);
     doc.text(
@@ -3188,9 +3196,20 @@ async function renderProtocols(siteId) {
   grid.innerHTML = protocols
     .map((p) => {
       const f = (p.data && p.data.fields) || {};
-      return `<article class="protocolCard"><button class="protocolCardMain" onclick="openProtocol('${p.id}')"><div class="protocolTop"><div class="documentIcon">▤</div><span class="statusBadge ${p.status === "completed" ? "completed" : "draft"}">${p.status === "completed" ? "Abgeschlossen" : "Entwurf"}</span></div><h3>${esc(p.title || "Unbenannte Prüfung")}</h3><p>${esc([f.datum && formatDate(f.datum), f.pruefer].filter(Boolean).join(" · ") || "Noch keine Prüfungsangaben")}</p><div class="cardMeta"><span>${((p.data && p.data.uvs) || []).length} UV</span><span>Geändert ${formatDate(p.updatedAt, true)}</span></div></button><div class="protocolActions"><button onclick="openProtocol('${p.id}')">Fortsetzen</button><button class="secondary" onclick="duplicateProtocol('${p.id}')">Duplizieren</button><button class="secondary" onclick="deleteProtocol('${p.id}')">Löschen</button></div></article>`;
+      return `<article class="protocolCard"><button class="protocolCardMain" onclick="openProtocol('${p.id}')"><div class="protocolTop"><div class="documentIcon">▤</div><span class="statusBadge ${p.status === "completed" ? "completed" : "draft"}">${p.status === "completed" ? "Abgeschlossen" : "Entwurf"}</span></div><h3>${esc(p.title || "Unbenannte Prüfung")}</h3><p>${esc([f.datum && formatDate(f.datum), f.pruefer].filter(Boolean).join(" · ") || "Noch keine Prüfungsangaben")}</p><div class="cardMeta"><span>${((p.data && p.data.uvs) || []).length} UV</span><span>Geändert ${formatDate(p.updatedAt, true)}</span></div></button><div class="protocolActions"><button onclick="openProtocol('${p.id}')">${p.status === "completed" ? "Ansehen" : "Fortsetzen"}</button><button class="secondary" onclick="duplicateProtocol('${p.id}')">Duplizieren</button><button class="secondary" onclick="deleteProtocol('${p.id}')">Löschen</button></div>${p.status === "completed" ? `<div class="protocolOutputActions"><button onclick="openProtocolOutput('${p.id}','pdf')">PDF erstellen / teilen</button><button class="secondary" onclick="openProtocolOutput('${p.id}','print')">Drucken</button></div>` : ""}</article>`;
     })
     .join("");
+}
+
+async function openProtocolOutput(protocolId, action) {
+  const protocol = await dbGet("protocols", protocolId);
+  if (!protocol || protocol.status !== "completed") {
+    showToast("Die Prüfung muss zuerst abgeschlossen werden.", true);
+    return;
+  }
+  await openProtocol(protocolId);
+  if (action === "pdf") await createPdf();
+  else if (action === "print") printProtocol();
 }
 
 function openSiteDialog() {

@@ -7,14 +7,14 @@
       content="width=device-width,initial-scale=1,viewport-fit=cover"
     />
     <meta name="theme-color" content="#c01820" />
-    <link rel="apple-touch-icon" href="icon-192.png" />
+    <link rel="apple-touch-icon" href="icon-192.png?v=26" />
     <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" href="style.css?v=25" />
+    <link rel="stylesheet" href="style.css?v=26" />
     <title>VDE Prüfprotokoll</title>
   </head>
   <body>
     <header class="appHeader">
-      <img src="logo.png" alt="Schaaf-Elektro Logo" class="appLogo" />
+      <img src="logo.png?v=26" alt="Schaaf-Elektro GmbH Logo" class="appLogo" />
       <div class="headerCopy">
         <h1>VDE Prüfprotokoll</h1>
         <p>DIN VDE 0100-600 / DIN VDE 0105-100 / DGUV V3</p>
@@ -566,17 +566,17 @@
       </section>
 
       <div class="actions protocolStep" data-step="5">
-        <button class="completeButton" onclick="completeProtocol()">
+        <button class="completeButton draftOnlyAction" onclick="completeProtocol()">
           Prüfung abschließen ✓
         </button>
-        <button onclick="saveData(true)">Jetzt speichern</button>
-        <button id="pdfButton" onclick="createPdf()">
+        <button class="draftOnlyAction" onclick="saveData(true)">Jetzt speichern</button>
+        <button id="pdfButton" class="completedOnlyAction hidden" onclick="createPdf()">
           PDF erstellen / teilen
         </button>
-        <button id="printButton" class="secondary" onclick="printProtocol()">
+        <button id="printButton" class="secondary completedOnlyAction hidden" onclick="printProtocol()">
           Drucken
         </button>
-        <button class="danger" onclick="resetData()">Prüfung löschen</button>
+        <button class="danger draftOnlyAction" onclick="resetData()">Prüfung löschen</button>
       </div>
 
       <nav class="stepActions">
@@ -804,7 +804,7 @@
             /></label>
           </div>
           <div id="logoPreview" class="logoPreview fixedLogo">
-            <img src="logo.png" alt="Schaaf-Elektro Logo" /><span
+            <img src="logo.png?v=26" alt="Schaaf-Elektro GmbH Logo" /><span
               >Fest hinterlegtes Firmenlogo</span
             >
           </div>
@@ -856,6 +856,6 @@
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="jspdf.umd.min.js?v=21"></script>
     <script src="jspdf.plugin.autotable.min.js?v=21"></script>
-    <script src="script.js?v=25"></script>
+    <script src="script.js?v=26"></script>
   </body>
 </html>
