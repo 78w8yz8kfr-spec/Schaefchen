@@ -2,7 +2,8 @@ const LEGACY_STORAGE = "vde-protokoll-v15-sichtbarkeit-reihenfolge";
 const DB_NAME = "schaefchen-vde-local";
 const DB_VERSION = 1;
 const APP_VERSION = 26;
-const logoData = "logo.png?v=33";
+let logoData = "";
+let pendingCompanyLogo = "";
 const fields = [
   "protocolNo",
   "customerNo",
@@ -76,8 +77,6 @@ const fields = [
   "firmMobile",
   "firmEmail",
   "firmCEO",
-  "firmCourt",
-  "firmHRB",
   "defaultPruefer",
   "hakName",
   "hakPlace",
@@ -1160,11 +1159,36 @@ function saveData(manual = false) {
   setSaveState("saving", "Speichert …");
   saveTimer = setTimeout(() => persistCurrentProtocol(false), 650);
 }
+function applyCompanyLogo(source = "") {
+  logoData = source || "";
+  const headerLogo = document.querySelector(".appLogo");
+  if (headerLogo) {
+    if (logoData) {
+      headerLogo.src = logoData;
+      headerLogo.classList.remove("hidden");
+    } else {
+      headerLogo.removeAttribute("src");
+      headerLogo.classList.add("hidden");
+    }
+  }
+  updateLogoPreview();
+}
 function updateLogoPreview() {
   const p = document.getElementById("logoPreview");
-  if (p)
-    p.innerHTML =
-      '<img src="logo.png?v=33" alt="Schaaf-Elektro GmbH Logo"><span>Fest hinterlegtes Firmenlogo</span>';
+  if (!p) return;
+  p.innerHTML = logoData
+    ? `<img src="${logoData}" alt="Firmenlogo"><span>Ausgewähltes Firmenlogo</span>`
+    : '<span>Noch kein Firmenlogo ausgewählt</span>';
+}
+async function handleCompanyLogoFile(files) {
+  const file = files && files[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    showToast("Bitte eine Bilddatei auswählen.", true);
+    return;
+  }
+  pendingCompanyLogo = await readFileAsDataUrl(file);
+  applyCompanyLogo(pendingCompanyLogo);
 }
 function initSettings() {
   updateLogoPreview();
@@ -1185,7 +1209,10 @@ async function openPresetDialog() {
       e.value =
         data[id] !== undefined ? data[id] : initialFieldValues[id] || "";
   });
-  updateLogoPreview();
+  pendingCompanyLogo = data.customLogo || "";
+  applyCompanyLogo(pendingCompanyLogo);
+  const logoInput = document.getElementById("companyLogoFile");
+  if (logoInput) logoInput.value = "";
   showDialog(document.getElementById("presetDialog"));
 }
 function closePresetDialog() {
@@ -1197,7 +1224,9 @@ async function savePresetForm(event) {
   presetFields.forEach(
     (id) => (data[id] = document.getElementById(id)?.value || ""),
   );
+  data.customLogo = pendingCompanyLogo || "";
   await dbPut("settings", { key: "company", data, updatedAt: nowIso() });
+  applyCompanyLogo(data.customLogo);
   closePresetDialog();
   showToast("Voreinstellungen lokal gespeichert");
 }
@@ -3023,6 +3052,9 @@ async function initApp() {
   captureInitialFieldValues();
   try {
     database = await openDatabase();
+    const savedCompanyLogo = await dbGet("settings", "company");
+    pendingCompanyLogo = savedCompanyLogo?.data?.customLogo || "";
+    applyCompanyLogo(pendingCompanyLogo);
     await migrateLegacyData();
     document
       .getElementById("siteSearch")
