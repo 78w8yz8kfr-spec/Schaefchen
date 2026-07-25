@@ -2028,7 +2028,7 @@ button:disabled {
     font-size: 9px;
   }
 }
-\n\n/* v26 neues Firmenlogo in App, PWA und PDF */\n
+/* v26 neues Firmenlogo in App, PWA und PDF */
 /* v26 Ausgabe abgeschlossener Prüfungen */
 .protocolOutputActions {
   display: grid;
@@ -2187,5 +2187,53 @@ button:disabled {
     max-width: 116px !important;
     height: auto !important;
     flex-basis: 116px !important;
+  }
+}
+
+
+/* v38: gleichmäßige Aktionsreihen und Home-Symbol-Hinweis */
+.protocolCard .protocolActions,
+.protocolCard .protocolOutputActions {
+  display: grid !important;
+  width: 100% !important;
+  gap: 9px !important;
+}
+.protocolCard .protocolActions {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+.protocolCard .protocolOutputActions {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  margin-top: 9px !important;
+}
+.protocolCard .protocolActions button,
+.protocolCard .protocolOutputActions button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 44px !important;
+  margin: 0 !important;
+  padding: 9px 8px !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.2;
+}
+.homeIconHint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+@media (max-width: 520px) {
+  .protocolCard .protocolActions,
+  .protocolCard .protocolOutputActions {
+    gap: 7px !important;
+  }
+  .protocolCard .protocolActions button,
+  .protocolCard .protocolOutputActions button {
+    font-size: 12px !important;
+    padding: 9px 5px !important;
   }
 }
