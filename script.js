@@ -1,9 +1,11 @@
 const LEGACY_STORAGE = "vde-protokoll-v15-sichtbarkeit-reihenfolge";
 const DB_NAME = "schaefchen-vde-local";
 const DB_VERSION = 1;
-const APP_VERSION = 26;
+const APP_VERSION = 38;
+const DEFAULT_HOME_ICON = "logo.png?v=38";
 let logoData = "";
 let pendingCompanyLogo = "";
+let homeIconUpdateToken = 0;
 const fields = [
   "protocolNo",
   "customerNo",
@@ -1159,6 +1161,45 @@ function saveData(manual = false) {
   setSaveState("saving", "Speichert …");
   saveTimer = setTimeout(() => persistCurrentProtocol(false), 650);
 }
+function updateHomeScreenIcon(source = "") {
+  const link = document.getElementById("homeScreenIcon");
+  if (!link) return;
+  const token = ++homeIconUpdateToken;
+  if (!source) {
+    link.href = DEFAULT_HOME_ICON;
+    return;
+  }
+  const image = new Image();
+  image.onload = () => {
+    if (token !== homeIconUpdateToken) return;
+    const size = 512,
+      padding = 44,
+      canvas = document.createElement("canvas"),
+      context = canvas.getContext("2d"),
+      scale = Math.min(
+        (size - padding * 2) / image.naturalWidth,
+        (size - padding * 2) / image.naturalHeight,
+      ),
+      width = Math.max(1, Math.round(image.naturalWidth * scale)),
+      height = Math.max(1, Math.round(image.naturalHeight * scale));
+    canvas.width = size;
+    canvas.height = size;
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, size, size);
+    context.drawImage(
+      image,
+      Math.round((size - width) / 2),
+      Math.round((size - height) / 2),
+      width,
+      height,
+    );
+    link.href = canvas.toDataURL("image/png");
+  };
+  image.onerror = () => {
+    if (token === homeIconUpdateToken) link.href = DEFAULT_HOME_ICON;
+  };
+  image.src = source;
+}
 function applyCompanyLogo(source = "") {
   logoData = source || "";
   const headerLogo = document.querySelector(".appLogo");
@@ -1171,6 +1212,7 @@ function applyCompanyLogo(source = "") {
       headerLogo.classList.add("hidden");
     }
   }
+  updateHomeScreenIcon(logoData);
   updateLogoPreview();
 }
 function updateLogoPreview() {
@@ -1638,7 +1680,9 @@ function clearSig() {
   saveData();
 }
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+  navigator.serviceWorker
+    .register("sw.js?v=38", { updateViaCache: "none" })
+    .catch(() => {});
 }
 
 function circuitEvalText(c, hasRcd, r, useDetailed = true) {
