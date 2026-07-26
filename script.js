@@ -1,8 +1,8 @@
 const LEGACY_STORAGE = "vde-protokoll-v15-sichtbarkeit-reihenfolge";
 const DB_NAME = "schaefchen-vde-local";
 const DB_VERSION = 1;
-const APP_VERSION = 39;
-const DEFAULT_HOME_ICON = "logo.png?v=39";
+const APP_VERSION = 40;
+const DEFAULT_HOME_ICON = "logo.png?v=40";
 let logoData = "";
 let pendingCompanyLogo = "";
 let homeIconUpdateToken = 0;
@@ -146,6 +146,9 @@ const potentialFields = [
 const protectiveDeviceLabels = {
   ls: "Leitungsschutzschalter (LS)",
   fuse: "Schmelzsicherung",
+  nhfuse: "NH-Sicherung",
+  dd0fuse: "D-/D0-Sicherung",
+  cylfuse: "Zylindersicherung",
   powerbreaker: "Leistungsschalter",
   motorbreaker: "Motorschutzschalter",
   other: "Sonstiges Schutzorgan",
@@ -153,13 +156,143 @@ const protectiveDeviceLabels = {
 const protectiveDeviceShortLabels = {
   ls: "LS",
   fuse: "Schmelzsicherung",
+  nhfuse: "NH",
+  dd0fuse: "D/D0",
+  cylfuse: "Zylindersicherung",
   powerbreaker: "Leistungsschalter",
   motorbreaker: "Motorschutz",
   other: "Sonstiges",
 };
+const protectionProfiles = {
+  ls: {
+    characteristicLabel: "Auslösecharakteristik",
+    characteristicOptions: [
+      ["B", "B"],
+      ["C", "C"],
+      ["D", "D"],
+      ["K", "K"],
+      ["Z", "Z"],
+    ],
+    variantLabel: "Polzahl",
+    variantList: "lsPoleOptions",
+    variantPlaceholder: "z. B. 3P+N",
+    currentLabel: "Nennstrom",
+  },
+  fuse: {
+    characteristicLabel: "Betriebsklasse",
+    characteristicOptions: [
+      ["gG", "gG"],
+      ["gL", "gL"],
+      ["aM", "aM"],
+      ["gM", "gM"],
+      ["gTr", "gTr"],
+      ["gR", "gR"],
+      ["aR", "aR"],
+      ["gPV", "gPV"],
+      ["sonstige", "sonstige"],
+    ],
+    variantLabel: "Bauform",
+    variantList: "fuseVariantOptions",
+    variantPlaceholder: "z. B. NH",
+    currentLabel: "Nennstrom",
+  },
+  nhfuse: {
+    characteristicLabel: "Betriebsklasse",
+    characteristicOptions: [
+      ["gG", "gG"],
+      ["aM", "aM"],
+      ["gTr", "gTr"],
+      ["gR", "gR"],
+      ["aR", "aR"],
+      ["gPV", "gPV"],
+      ["sonstige", "sonstige"],
+    ],
+    variantLabel: "NH-Baugröße",
+    variantList: "nhFuseSizeOptions",
+    variantPlaceholder: "z. B. NH00",
+    currentLabel: "Nennstrom",
+  },
+  dd0fuse: {
+    characteristicLabel: "Betriebsklasse",
+    characteristicOptions: [
+      ["gG", "gG"],
+      ["gL", "gL"],
+      ["aM", "aM"],
+      ["sonstige", "sonstige"],
+    ],
+    variantLabel: "System / Größe",
+    variantList: "dd0FuseSizeOptions",
+    variantPlaceholder: "z. B. D02",
+    currentLabel: "Nennstrom",
+  },
+  cylfuse: {
+    characteristicLabel: "Betriebsklasse",
+    characteristicOptions: [
+      ["gG", "gG"],
+      ["aM", "aM"],
+      ["gR", "gR"],
+      ["aR", "aR"],
+      ["gPV", "gPV"],
+      ["sonstige", "sonstige"],
+    ],
+    variantLabel: "Abmessung",
+    variantList: "cylFuseSizeOptions",
+    variantPlaceholder: "z. B. 10 × 38 mm",
+    currentLabel: "Nennstrom",
+  },
+  powerbreaker: {
+    characteristicLabel: "Auslöseeinheit",
+    characteristicOptions: [
+      ["thermomagnetisch", "thermomagnetisch"],
+      ["elektronisch", "elektronisch"],
+      ["magnetisch", "magnetisch"],
+      ["sonstige", "sonstige"],
+    ],
+    variantLabel: "Bauart",
+    variantList: "powerBreakerTypeOptions",
+    variantPlaceholder: "z. B. MCCB",
+    currentLabel: "Bemessungsstrom In",
+    settingLabel: "Auslöseeinstellung",
+    settingPlaceholder: "z. B. Ir 0,8 × In · Isd 6 × Ir",
+  },
+  motorbreaker: {
+    characteristicLabel: "Auslöser",
+    characteristicOptions: [
+      ["thermomagnetisch", "thermomagnetisch"],
+      ["elektronisch", "elektronisch"],
+      ["sonstige", "sonstige"],
+    ],
+    variantLabel: "Einstellbereich",
+    variantPlaceholder: "z. B. 10–16 A",
+    currentLabel: "Eingestellter Strom Ir",
+    settingLabel: "Kurzschlussauslöser (falls einstellbar)",
+    settingPlaceholder: "z. B. 13 × Ir",
+  },
+  other: {
+    characteristicOptions: [],
+    variantLabel: "Bezeichnung / Typ",
+    variantPlaceholder: "Schutzorgan genau bezeichnen",
+    currentLabel: "Nennstrom (falls vorhanden)",
+  },
+};
 function protectiveDeviceLabel(value, short = false) {
   const labels = short ? protectiveDeviceShortLabels : protectiveDeviceLabels;
   return labels[value] || labels.ls;
+}
+function protectionProfile(type, isFils = false) {
+  return protectionProfiles[isFils ? "ls" : type] || protectionProfiles.ls;
+}
+function protectionCharacteristicOptions(type, current = "", isFils = false) {
+  const options = protectionProfile(type, isFils).characteristicOptions || [];
+  const selected = options.some(([value]) => value === current)
+    ? current
+    : options[0]?.[0] || "";
+  return options
+    .map(
+      ([value, label]) =>
+        `<option value="${esc(value)}" ${value === selected ? "selected" : ""}>${esc(label)}</option>`,
+    )
+    .join("");
 }
 function lsRequiredTripCurrent(characteristic, nominalCurrent) {
   const current = dec(nominalCurrent);
@@ -167,12 +300,22 @@ function lsRequiredTripCurrent(characteristic, nominalCurrent) {
   return multiplier && current > 0 ? multiplier * current : undefined;
 }
 function protectionTextData(c, short = false) {
-  const kind =
-    c.device === "fils"
-      ? "FI/LS"
-      : protectiveDeviceLabel(c.protectiveDevice || "ls", short);
-  const rating = [c.char, c.a && `${c.a} A`].filter(Boolean).join(" ");
-  return [kind, rating].filter(Boolean).join(" ");
+  const type = c.device === "fils" ? "ls" : c.protectiveDevice || "ls",
+    profile = protectionProfile(type, c.device === "fils"),
+    kind =
+      c.device === "fils"
+        ? "FI/LS"
+        : protectiveDeviceLabel(type, short),
+    details = [
+      profile.variantLabel && c.protectionVariant,
+      profile.characteristicOptions?.length && c.char,
+      c.a && `${c.a} A`,
+    ].filter(Boolean),
+    setting =
+      profile.settingLabel && c.protectionSetting
+        ? ` · ${c.protectionSetting}`
+        : "";
+  return `${[kind, ...details].join(" ")}${setting}`.trim();
 }
 let uid = 1;
 let database = null;
@@ -556,11 +699,16 @@ function circuitHtml(d = {}) {
   const dev = d.device || "ls";
   const protection = d.protectiveDevice || "ls";
   const inside = !!d.insideRcd;
+  const charOptions = protectionCharacteristicOptions(
+    protection,
+    d.char || "",
+    dev === "fils",
+  );
   const deviceField = inside
     ? `<div class="badgeField"><span>FI/RCD-Zuordnung</span><b>übergeordnet</b><input type="hidden" class="ck-device" value="ls"></div>`
     : `<label>FI/RCD-Zuordnung<select class="ck-device" onchange="updateCircuitVisibility(this.closest('.circuit'))"><option value="ls" ${dev !== "fils" ? "selected" : ""}>ohne FI/RCD</option><option value="fils" ${dev === "fils" ? "selected" : ""}>FI/LS (kombiniert)</option></select></label>`;
-  const protectionField = `<label class="standardProtectionOnly">Schutzorgan<select class="ck-protection" onchange="updateCircuitSummary(this.closest('.circuit'))"><option value="ls" ${protection === "ls" ? "selected" : ""}>Leitungsschutzschalter (LS)</option><option value="fuse" ${protection === "fuse" ? "selected" : ""}>Schmelzsicherung</option><option value="powerbreaker" ${protection === "powerbreaker" ? "selected" : ""}>Leistungsschalter</option><option value="motorbreaker" ${protection === "motorbreaker" ? "selected" : ""}>Motorschutzschalter</option><option value="other" ${protection === "other" ? "selected" : ""}>Sonstiges Schutzorgan</option></select></label>`;
-  return `<div class="circuit ${inside ? "insideRcd" : ""}"><div class="circuitTop"><div class="circuitHeading"><b class="circuit-index">Stromkreis</b><span class="circuit-title">${esc(d.name || "Noch nicht bezeichnet")}</span></div><div class="moveBtns"><button type="button" class="secondary small" onclick="moveCircuit(this,-1)" title="Nach oben">↑</button><button type="button" class="secondary small" onclick="moveCircuit(this,1)" title="Nach unten">↓</button><button type="button" class="secondary small" onclick="duplicateCircuit(this)" title="Duplizieren">Kopie</button></div></div><div class="grid circuitBasics">${deviceField}${protectionField}<label>Stromkreis / Bezeichnung<input class="ck-name" value="${esc(d.name || "")}" placeholder="z. B. F1 Steckdosen Küche"></label><label>Kabeltyp / Leitung${cableSelect("ck-cable", d.cable || "")}</label><label>Adernzahl${coreSelect("ck-cores", d.cores || "")}</label><label>Querschnitt<span class="unitField"><input class="ck-cross" value="${esc(d.cross || "")}" inputmode="decimal" placeholder="z. B. 1,5"><span>mm²</span></span></label><label>Kennlinie / Betriebsklasse<select class="ck-char"><option value="B" ${!d.char || d.char === "B" ? "selected" : ""}>B</option><option value="C" ${d.char === "C" ? "selected" : ""}>C</option><option value="D" ${d.char === "D" ? "selected" : ""}>D</option><option value="K" ${d.char === "K" ? "selected" : ""}>K</option><option value="Z" ${d.char === "Z" ? "selected" : ""}>Z</option><option value="gG" ${d.char === "gG" ? "selected" : ""}>gG</option><option value="aM" ${d.char === "aM" ? "selected" : ""}>aM</option><option value="gR" ${d.char === "gR" ? "selected" : ""}>gR</option><option value="aR" ${d.char === "aR" ? "selected" : ""}>aR</option><option value="einstellbar" ${d.char === "einstellbar" ? "selected" : ""}>einstellbar</option><option value="sonstige" ${d.char === "sonstige" ? "selected" : ""}>sonstige</option></select></label><label>Nennstrom<span class="unitField"><input class="ck-a" list="nominalCurrentOptions" value="${esc(d.a || "16")}" inputmode="decimal" placeholder="z. B. 63"><span>A</span></span></label><label class="filsOnly">FI/LS Typ<select class="ck-rcdtype"><option ${!d.rcdType || d.rcdType === "A" ? "selected" : ""}>A</option><option ${d.rcdType === "F" ? "selected" : ""}>F</option><option ${d.rcdType === "B" ? "selected" : ""}>B</option><option ${d.rcdType === "AC" ? "selected" : ""}>AC</option></select></label><label class="filsOnly">FI/LS Charakteristik<select class="ck-rcdchar"><option ${!d.rcdChar || d.rcdChar === "unverzögert" ? "selected" : ""}>unverzögert</option><option ${d.rcdChar === "G / kurzzeitverzögert" ? "selected" : ""}>G / kurzzeitverzögert</option><option ${d.rcdChar === "S / selektiv" ? "selected" : ""}>S / selektiv</option></select></label><label class="filsOnly">FI/LS IΔn<select class="ck-rcdidn"><option ${d.rcdIdn === "10" ? "selected" : ""} value="10">10 mA</option><option ${!d.rcdIdn || d.rcdIdn === "30" ? "selected" : ""} value="30">30 mA</option><option ${d.rcdIdn === "100" ? "selected" : ""} value="100">100 mA</option><option ${d.rcdIdn === "300" ? "selected" : ""} value="300">300 mA</option></select></label><label class="checkLabel filsOnly">FI/LS Prüftaste<input class="ck-rcdtest" type="checkbox" ${d.rcdTest ? "checked" : ""}></label></div><details class="measurementPanel" open><summary>Messwerte eingeben</summary><div class="grid measurementGrid"><label>Schutzleiter RPE Ω<input class="ck-rpe" value="${esc(d.rpe || "")}" inputmode="decimal"></label><label>Isolation RISO (kleinster Wert) MΩ<input class="ck-riso" value="${esc(d.riso || "")}" inputmode="decimal"></label><label>Prüfspannung U<sub>Mess</sub> V<input class="ck-risov" value="${esc(d.risoV || "")}" inputmode="decimal"></label><label>Verbraucher angeschlossen<select class="ck-consumer"><option value="">Nicht angegeben</option><option value="ja" ${d.consumer === "ja" ? "selected" : ""}>Ja</option><option value="nein" ${d.consumer === "nein" ? "selected" : ""}>Nein</option></select></label><label>Netzinnenimpedanz Zi (L-N) Ω<input class="ck-zi" value="${esc(d.zi || "")}" inputmode="decimal"></label><label>Schleifenimpedanz Zs (L-PE) Ω<input class="ck-zs" value="${esc(d.zs || "")}" inputmode="decimal"></label><label>Kurzschlussstrom IK A<input class="ck-ik" value="${esc(d.ik || "")}" inputmode="decimal"></label><label class="rcdMeasure">RCD-Berührungsspannung U<sub>L</sub> V<input class="ck-rcdul" value="${esc(d.rcdUl || "")}" inputmode="decimal"></label><label class="rcdMeasure">RCD-Auslösezeit ms<input class="ck-rcdms" value="${esc(d.rcdms || "")}" inputmode="decimal"></label><label class="rcdMeasure">RCD-Auslösestrom mA<input class="ck-rcdma" value="${esc(d.rcdma || "")}" inputmode="decimal"></label><label>Bemerkung<input class="ck-note" value="${esc(d.note || "")}"></label></div><details class="insulationDetails"><summary>Detaillierte Isolationsmessung</summary><div class="grid"><label>N–PE MΩ<input class="ck-riso-npe" value="${esc(d.risoNpe || "")}"></label><label>L1–PE MΩ<input class="ck-riso-l1pe" value="${esc(d.risoL1pe || "")}"></label><label>L1–N MΩ<input class="ck-riso-l1n" value="${esc(d.risoL1n || "")}"></label><label>L2–PE MΩ<input class="ck-riso-l2pe" value="${esc(d.risoL2pe || "")}"></label><label>L2–N MΩ<input class="ck-riso-l2n" value="${esc(d.risoL2n || "")}"></label><label>L3–PE MΩ<input class="ck-riso-l3pe" value="${esc(d.risoL3pe || "")}"></label><label>L3–N MΩ<input class="ck-riso-l3n" value="${esc(d.risoL3n || "")}"></label><label>L1–L2 MΩ<input class="ck-riso-l1l2" value="${esc(d.risoL1l2 || "")}"></label><label>L1–L3 MΩ<input class="ck-riso-l1l3" value="${esc(d.risoL1l3 || "")}"></label><label>L2–L3 MΩ<input class="ck-riso-l2l3" value="${esc(d.risoL2l3 || "")}"></label></div></details></details><div class="status neutral">Bewertung fehlt</div><div class="circuitFooter"><button class="danger small" onclick="removeStructure(this,'.circuit','Stromkreis')">Stromkreis löschen</button><button class="secondary small" onclick="addCircuitAfter(this)">+ Stromkreis hinzufügen</button></div></div>`;
+  const protectionField = `<label class="standardProtectionOnly">Schutzorgan<select class="ck-protection" onchange="updateProtectionFields(this.closest('.circuit'))"><optgroup label="Schalter"><option value="ls" ${protection === "ls" ? "selected" : ""}>Leitungsschutzschalter (LS)</option><option value="powerbreaker" ${protection === "powerbreaker" ? "selected" : ""}>Leistungsschalter</option><option value="motorbreaker" ${protection === "motorbreaker" ? "selected" : ""}>Motorschutzschalter</option></optgroup><optgroup label="Sicherungen"><option value="nhfuse" ${protection === "nhfuse" ? "selected" : ""}>NH-Sicherung</option><option value="dd0fuse" ${protection === "dd0fuse" ? "selected" : ""}>D-/D0-Sicherung</option><option value="cylfuse" ${protection === "cylfuse" ? "selected" : ""}>Zylindersicherung</option><option value="fuse" ${protection === "fuse" ? "selected" : ""}>Schmelzsicherung (allgemein)</option></optgroup><option value="other" ${protection === "other" ? "selected" : ""}>Sonstiges Schutzorgan</option></select></label>`;
+  return `<div class="circuit ${inside ? "insideRcd" : ""}"><div class="circuitTop"><div class="circuitHeading"><b class="circuit-index">Stromkreis</b><span class="circuit-title">${esc(d.name || "Noch nicht bezeichnet")}</span></div><div class="moveBtns"><button type="button" class="secondary small" onclick="moveCircuit(this,-1)" title="Nach oben">↑</button><button type="button" class="secondary small" onclick="moveCircuit(this,1)" title="Nach unten">↓</button><button type="button" class="secondary small" onclick="duplicateCircuit(this)" title="Duplizieren">Kopie</button></div></div><div class="grid circuitBasics">${deviceField}${protectionField}<label>Stromkreis / Bezeichnung<input class="ck-name" value="${esc(d.name || "")}" placeholder="z. B. F1 Steckdosen Küche"></label><label>Kabeltyp / Leitung${cableSelect("ck-cable", d.cable || "")}</label><label>Adernzahl${coreSelect("ck-cores", d.cores || "")}</label><label>Querschnitt<span class="unitField"><input class="ck-cross" value="${esc(d.cross || "")}" inputmode="decimal" placeholder="z. B. 1,5"><span>mm²</span></span></label><label class="protectionVariantField"><span class="protectionVariantLabel">Bauform</span><input class="ck-protection-variant" value="${esc(d.protectionVariant || "")}" placeholder="Bauform"></label><label class="protectionCharacteristicField"><span class="protectionCharacteristicLabel">Kennlinie / Betriebsklasse</span><select class="ck-char">${charOptions}</select></label><label class="protectionCurrentField"><span class="protectionCurrentLabel">Nennstrom</span><span class="unitField"><input class="ck-a" list="nominalCurrentOptions" value="${esc(d.a || "16")}" inputmode="decimal" placeholder="z. B. 63"><span>A</span></span></label><label class="protectionSettingField"><span class="protectionSettingLabel">Auslöseeinstellung</span><input class="ck-protection-setting" value="${esc(d.protectionSetting || "")}" placeholder="Einstellwerte"></label><label class="filsOnly">FI/LS Typ<select class="ck-rcdtype"><option ${!d.rcdType || d.rcdType === "A" ? "selected" : ""}>A</option><option ${d.rcdType === "F" ? "selected" : ""}>F</option><option ${d.rcdType === "B" ? "selected" : ""}>B</option><option ${d.rcdType === "AC" ? "selected" : ""}>AC</option></select></label><label class="filsOnly">FI/LS Charakteristik<select class="ck-rcdchar"><option ${!d.rcdChar || d.rcdChar === "unverzögert" ? "selected" : ""}>unverzögert</option><option ${d.rcdChar === "G / kurzzeitverzögert" ? "selected" : ""}>G / kurzzeitverzögert</option><option ${d.rcdChar === "S / selektiv" ? "selected" : ""}>S / selektiv</option></select></label><label class="filsOnly">FI/LS IΔn<select class="ck-rcdidn"><option ${d.rcdIdn === "10" ? "selected" : ""} value="10">10 mA</option><option ${!d.rcdIdn || d.rcdIdn === "30" ? "selected" : ""} value="30">30 mA</option><option ${d.rcdIdn === "100" ? "selected" : ""} value="100">100 mA</option><option ${d.rcdIdn === "300" ? "selected" : ""} value="300">300 mA</option></select></label><label class="checkLabel filsOnly">FI/LS Prüftaste<input class="ck-rcdtest" type="checkbox" ${d.rcdTest ? "checked" : ""}></label></div><details class="measurementPanel" open><summary>Messwerte eingeben</summary><div class="grid measurementGrid"><label>Schutzleiter RPE Ω<input class="ck-rpe" value="${esc(d.rpe || "")}" inputmode="decimal"></label><label>Isolation RISO (kleinster Wert) MΩ<input class="ck-riso" value="${esc(d.riso || "")}" inputmode="decimal"></label><label>Prüfspannung U<sub>Mess</sub> V<input class="ck-risov" value="${esc(d.risoV || "")}" inputmode="decimal"></label><label>Verbraucher angeschlossen<select class="ck-consumer"><option value="">Nicht angegeben</option><option value="ja" ${d.consumer === "ja" ? "selected" : ""}>Ja</option><option value="nein" ${d.consumer === "nein" ? "selected" : ""}>Nein</option></select></label><label>Netzinnenimpedanz Zi (L-N) Ω<input class="ck-zi" value="${esc(d.zi || "")}" inputmode="decimal"></label><label>Schleifenimpedanz Zs (L-PE) Ω<input class="ck-zs" value="${esc(d.zs || "")}" inputmode="decimal"></label><label>Kurzschlussstrom IK A<input class="ck-ik" value="${esc(d.ik || "")}" inputmode="decimal"></label><label class="rcdMeasure">RCD-Berührungsspannung U<sub>L</sub> V<input class="ck-rcdul" value="${esc(d.rcdUl || "")}" inputmode="decimal"></label><label class="rcdMeasure">RCD-Auslösezeit ms<input class="ck-rcdms" value="${esc(d.rcdms || "")}" inputmode="decimal"></label><label class="rcdMeasure">RCD-Auslösestrom mA<input class="ck-rcdma" value="${esc(d.rcdma || "")}" inputmode="decimal"></label><label>Bemerkung<input class="ck-note" value="${esc(d.note || "")}"></label></div><details class="insulationDetails"><summary>Detaillierte Isolationsmessung</summary><div class="grid"><label>N–PE MΩ<input class="ck-riso-npe" value="${esc(d.risoNpe || "")}"></label><label>L1–PE MΩ<input class="ck-riso-l1pe" value="${esc(d.risoL1pe || "")}"></label><label>L1–N MΩ<input class="ck-riso-l1n" value="${esc(d.risoL1n || "")}"></label><label>L2–PE MΩ<input class="ck-riso-l2pe" value="${esc(d.risoL2pe || "")}"></label><label>L2–N MΩ<input class="ck-riso-l2n" value="${esc(d.risoL2n || "")}"></label><label>L3–PE MΩ<input class="ck-riso-l3pe" value="${esc(d.risoL3pe || "")}"></label><label>L3–N MΩ<input class="ck-riso-l3n" value="${esc(d.risoL3n || "")}"></label><label>L1–L2 MΩ<input class="ck-riso-l1l2" value="${esc(d.risoL1l2 || "")}"></label><label>L1–L3 MΩ<input class="ck-riso-l1l3" value="${esc(d.risoL1l3 || "")}"></label><label>L2–L3 MΩ<input class="ck-riso-l2l3" value="${esc(d.risoL2l3 || "")}"></label></div></details></details><div class="status neutral">Bewertung fehlt</div><div class="circuitFooter"><button class="danger small" onclick="removeStructure(this,'.circuit','Stromkreis')">Stromkreis löschen</button><button class="secondary small" onclick="addCircuitAfter(this)">+ Stromkreis hinzufügen</button></div></div>`;
 }
 function enhanceCircuit(c, data = {}) {
   c._defectPhotos = Array.isArray(data.defectPhotos)
@@ -620,13 +768,19 @@ function updateCircuitSummary(c) {
   if (!c) return;
   const inside = c.closest(".rcd"),
     isFils = val(c, ".ck-device") === "fils",
-    kind = isFils
-      ? "FI/LS"
-      : protectiveDeviceLabel(val(c, ".ck-protection") || "ls", true),
-    rating = [val(c, ".ck-char"), val(c, ".ck-a") && `${val(c, ".ck-a")} A`]
-      .filter(Boolean)
-      .join(" "),
-    protection = [kind, rating].filter(Boolean).join(" "),
+    type = isFils ? "ls" : val(c, ".ck-protection") || "ls",
+    profile = protectionProfile(type, isFils),
+    kind = isFils ? "FI/LS" : protectiveDeviceLabel(type, true),
+    details = [
+      profile.variantLabel && val(c, ".ck-protection-variant"),
+      profile.characteristicOptions?.length && val(c, ".ck-char"),
+      val(c, ".ck-a") && `${val(c, ".ck-a")} A`,
+    ].filter(Boolean),
+    setting =
+      profile.settingLabel && val(c, ".ck-protection-setting")
+        ? ` · ${val(c, ".ck-protection-setting")}`
+        : "",
+    protection = `${[kind, ...details].join(" ")}${setting}`,
     fi = inside ? ` · ${val(inside, ".rcd-name") || "FI"}` : "",
     summary = c.querySelector(".circuit-summary"),
     status = c.querySelector(".status");
@@ -737,6 +891,60 @@ function setCircuitHeading(c, number) {
   if (title) title.textContent = val(c, ".ck-name") || "Noch nicht bezeichnet";
   updateCircuitSummary(c);
 }
+function updateProtectionFields(c) {
+  if (!c) return;
+  const isFils = val(c, ".ck-device") === "fils",
+    type = isFils ? "ls" : val(c, ".ck-protection") || "ls",
+    profile = protectionProfile(type, isFils),
+    characteristicField = c.querySelector(".protectionCharacteristicField"),
+    characteristicLabel = c.querySelector(".protectionCharacteristicLabel"),
+    characteristicSelect = c.querySelector(".ck-char"),
+    variantField = c.querySelector(".protectionVariantField"),
+    variantLabel = c.querySelector(".protectionVariantLabel"),
+    variantInput = c.querySelector(".ck-protection-variant"),
+    currentLabel = c.querySelector(".protectionCurrentLabel"),
+    settingField = c.querySelector(".protectionSettingField"),
+    settingLabel = c.querySelector(".protectionSettingLabel"),
+    settingInput = c.querySelector(".ck-protection-setting");
+  if (characteristicSelect) {
+    const current = characteristicSelect.value;
+    characteristicSelect.innerHTML = protectionCharacteristicOptions(
+      type,
+      current,
+      isFils,
+    );
+  }
+  if (characteristicField)
+    characteristicField.style.display = profile.characteristicOptions?.length
+      ? "flex"
+      : "none";
+  if (characteristicLabel)
+    characteristicLabel.textContent =
+      profile.characteristicLabel || "Kennlinie";
+  if (variantField)
+    variantField.style.display = profile.variantLabel ? "flex" : "none";
+  if (variantLabel) variantLabel.textContent = profile.variantLabel || "";
+  const previousType = c.dataset.protectionType;
+  if (previousType && previousType !== type) {
+    if (variantInput) variantInput.value = "";
+    if (settingInput) settingInput.value = "";
+  }
+  c.dataset.protectionType = type;
+  if (variantInput) {
+    variantInput.placeholder = profile.variantPlaceholder || "";
+    if (profile.variantList)
+      variantInput.setAttribute("list", profile.variantList);
+    else variantInput.removeAttribute("list");
+  }
+  if (currentLabel)
+    currentLabel.textContent = profile.currentLabel || "Nennstrom";
+  if (settingField)
+    settingField.style.display = profile.settingLabel ? "flex" : "none";
+  if (settingLabel) settingLabel.textContent = profile.settingLabel || "";
+  if (settingInput)
+    settingInput.placeholder = profile.settingPlaceholder || "";
+  updateCircuitSummary(c);
+}
 function updateCircuitVisibility(c) {
   if (!c) return;
   const isInside = c.closest(".rcd") !== null;
@@ -755,6 +963,7 @@ function updateCircuitVisibility(c) {
   c.querySelectorAll(".rcdMeasure").forEach(
     (e) => (e.style.display = isInside || isFils ? "flex" : "none"),
   );
+  updateProtectionFields(c);
 }
 function updateRelevantFields() {
   const detailed = !!document.getElementById("detailedInsulation")?.checked;
@@ -1135,6 +1344,8 @@ function circuitData(c) {
   return {
     device,
     protectiveDevice: val(c, ".ck-protection") || "ls",
+    protectionVariant: val(c, ".ck-protection-variant"),
+    protectionSetting: val(c, ".ck-protection-setting"),
     phase: val(c, ".ck-phase") || "single",
     name: val(c, ".ck-name"),
     cable: cableFieldValue(c, ".ck-cable", ".ck-cable-custom"),
@@ -1712,7 +1923,7 @@ function clearSig() {
 }
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
-    .register("sw.js?v=39", { updateViaCache: "none" })
+    .register("sw.js?v=40", { updateViaCache: "none" })
     .catch(() => {});
 }
 
