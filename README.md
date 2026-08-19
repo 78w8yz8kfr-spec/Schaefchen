@@ -8,6 +8,8 @@ Offline-fähige Prüfapp für DIN VDE 0100-600, DIN VDE 0105-100 und DGUV Vorsch
 - beliebig viele Prüfungen je Baustelle
 - automatische lokale Entwurfsspeicherung
 - Prüfungen fortsetzen, duplizieren, abschließen und als PDF drucken
+- frei wählbare Stromkreisnummern, zum Beispiel FI `1F` mit Stromkreis `1F2`
+- PDF-Bemerkungen enthalten ausschließlich selbst eingetragene Texte
 - lokale Fotodokumentation und Prüferunterschrift
 - vollständige JSON-Sicherung mit Import
 - installierbare Progressive Web App mit Offline-Cache
