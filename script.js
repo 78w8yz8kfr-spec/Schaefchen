@@ -1,8 +1,8 @@
 const LEGACY_STORAGE = "vde-protokoll-v15-sichtbarkeit-reihenfolge";
 const DB_NAME = "schaefchen-vde-local";
 const DB_VERSION = 1;
-const APP_VERSION = 41;
-const DEFAULT_HOME_ICON = "logo.png?v=41";
+const APP_VERSION = 42;
+const DEFAULT_HOME_ICON = "logo.png?v=42";
 let logoData = "";
 let pendingCompanyLogo = "";
 let homeIconUpdateToken = 0;
@@ -620,6 +620,17 @@ function addRcd(uvId, data = {}) {
     rcdHtml(rcdId, data),
   );
   const r = uv.querySelector(`[data-rcd="${rcdId}"]`);
+  const rcdNameInput = r.querySelector(".rcd-name");
+  const rcdNameLabel = rcdNameInput?.closest("label");
+  if (rcdNameLabel?.firstChild) {
+    rcdNameLabel.firstChild.textContent =
+      "FI/RCD-Nr. oder Bezeichnung (frei wählbar)";
+  }
+  if (rcdNameInput) {
+    rcdNameInput.placeholder = "z. B. 1F oder 3.1F";
+    rcdNameInput.maxLength = 24;
+    rcdNameInput.autocomplete = "off";
+  }
   (data.circuits || []).forEach((c) =>
     addCircuit(r.querySelector(".circuits"), c),
   );
@@ -870,11 +881,17 @@ function updateStructureLabels() {
     if (title) title.textContent = uvName;
     uv.querySelectorAll(":scope .uvBody > .rcds > .rcd").forEach(
       (rcd, rcdIndex) => {
-        const rcdName = val(rcd, ".rcd-name") || `FI ${rcdIndex + 1}`;
+        const automaticRcdNumber = `${uvNumber}.${rcdIndex + 1}`;
+        const displayRcdNumber = rcdNumber(
+          { name: val(rcd, ".rcd-name") },
+          automaticRcdNumber,
+        );
         const ri = rcd.querySelector(".rcd-index"),
-          rt = rcd.querySelector(".rcd-title");
-        if (ri) ri.textContent = `FI-Stromkreis ${uvNumber}.${rcdIndex + 1}`;
-        if (rt) rt.textContent = rcdName;
+          rt = rcd.querySelector(".rcd-title"),
+          separator = rcd.querySelector(".structureSeparator");
+        if (ri) ri.textContent = `FI-Stromkreis ${displayRcdNumber}`;
+        if (rt) rt.textContent = "";
+        if (separator) separator.hidden = true;
         rcd
           .querySelectorAll(":scope .rcdBody > .circuits > .circuit")
           .forEach((c, circuitIndex) =>
@@ -1932,7 +1949,7 @@ function clearSig() {
 }
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
-    .register("sw.js?v=41", { updateViaCache: "none" })
+    .register("sw.js?v=42", { updateViaCache: "none" })
     .catch(() => {});
 }
 
@@ -2174,6 +2191,9 @@ function compactCheckRows(checkData = {}) {
 function circuitNumber(circuit, fallback) {
   return String(circuit?.number || "").trim() || fallback;
 }
+function rcdNumber(rcd, fallback) {
+  return String(rcd?.name || "").trim() || fallback;
+}
 function protocolCircuitEntries(d) {
   const entries = [];
   (d.uvs || []).forEach((u, ui) => {
@@ -2182,7 +2202,7 @@ function protocolCircuitEntries(d) {
         entries.push({
           number: circuitNumber(c, `${ui + 1}.${ri + 1}.${ci + 1}`),
           uv: u.name || `UV ${ui + 1}`,
-          fi: r.name || `FI ${ri + 1}`,
+          fi: rcdNumber(r, `FI ${ri + 1}`),
           rcd: r,
           hasUpstreamRcd: true,
           c,
@@ -2268,11 +2288,12 @@ function preparePrint() {
       const re = rcdEvalText(r);
       if (re.state === "bad") bad++;
       else if (re.state === "warn") warn++;
-      const fiNumber = `${ui + 1}.${ri + 1}`;
-      rows += `<tr><td colspan="20"><b>FI-Stromkreis ${fiNumber}:</b> ${esc(r.name || "FI " + (ri + 1))} | Typ ${esc(r.type)} | Charakteristik ${esc(r.char)} | In ${esc(r.inn)} | IΔn ${esc(r.idn)} mA | Prüftaste ${yn(r.test)} | <span class="${re.state}">${re.text}</span>${re.msg ? " – " + esc(re.msg) : ""}</td></tr>`;
+      const automaticFiNumber = `${ui + 1}.${ri + 1}`;
+      const fiNumber = rcdNumber(r, automaticFiNumber);
+      rows += `<tr><td colspan="20"><b>FI-Stromkreis ${esc(fiNumber)}:</b> Typ ${esc(r.type)} | Charakteristik ${esc(r.char)} | In ${esc(r.inn)} | IΔn ${esc(r.idn)} mA | Prüftaste ${yn(r.test)} | <span class="${re.state}">${re.text}</span>${re.msg ? " – " + esc(re.msg) : ""}</td></tr>`;
       rows += measHeader();
       (r.circuits || []).forEach((c, ci) => {
-        const number = circuitNumber(c, `${fiNumber}.${ci + 1}`),
+        const number = circuitNumber(c, `${automaticFiNumber}.${ci + 1}`),
           ce = circuitEvalText(c, true, r, useDetailedInsulation);
         if (ce.state === "bad") bad++;
         else if (ce.state === "warn") warn++;
@@ -3088,7 +3109,7 @@ function pdfCircuitRows(
       c.device === "fils"
         ? "integriert"
         : hasUpstreamRcd
-          ? (r && r.name) || "FI"
+          ? rcdNumber(r, "FI")
           : "—",
     device =
       c.device === "fils"
@@ -3135,7 +3156,7 @@ function protectionLabel(c, hasUpstreamRcd, r) {
   }
   return {
     kind: esc(protectiveDeviceLabel(c.protectiveDevice || "ls", true)),
-    fi: hasUpstreamRcd ? esc((r && r.name) || "FI") : "—",
+    fi: hasUpstreamRcd ? esc(rcdNumber(r, "FI")) : "—",
     device: esc(protectionTextData(c)),
   };
 }
