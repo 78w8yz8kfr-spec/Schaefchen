@@ -1,8 +1,8 @@
 const LEGACY_STORAGE = "vde-protokoll-v15-sichtbarkeit-reihenfolge";
 const DB_NAME = "schaefchen-vde-local";
 const DB_VERSION = 1;
-const APP_VERSION = 40;
-const DEFAULT_HOME_ICON = "logo.png?v=40";
+const APP_VERSION = 41;
+const DEFAULT_HOME_ICON = "logo.png?v=41";
 let logoData = "";
 let pendingCompanyLogo = "";
 let homeIconUpdateToken = 0;
@@ -717,6 +717,13 @@ function enhanceCircuit(c, data = {}) {
   const heading = c.querySelector(".circuitHeading"),
     controls = c.querySelector(".moveBtns"),
     status = c.querySelector(".status");
+  const nameField = c.querySelector(".ck-name")?.closest("label");
+  if (nameField && !c.querySelector(".ck-number")) {
+    nameField.insertAdjacentHTML(
+      "beforebegin",
+      `<label>Stromkreis-Nr. (frei wählbar)<input class="ck-number" value="${esc(data.number || "")}" maxlength="24" placeholder="z. B. 1F2" autocomplete="off"></label>`,
+    );
+  }
   const inferredPhase =
     data.phase || (Number.parseInt(data.cores, 10) >= 4 ? "three" : "single");
   const coreLabel = c.querySelector(".ck-cores")?.closest("label");
@@ -887,7 +894,8 @@ function updateStructureLabels() {
 function setCircuitHeading(c, number) {
   const index = c.querySelector(".circuit-index"),
     title = c.querySelector(".circuit-title");
-  if (index) index.textContent = `Stromkreis ${number}`;
+  const displayNumber = val(c, ".ck-number") || number;
+  if (index) index.textContent = `Stromkreis ${displayNumber}`;
   if (title) title.textContent = val(c, ".ck-name") || "Noch nicht bezeichnet";
   updateCircuitSummary(c);
 }
@@ -1347,6 +1355,7 @@ function circuitData(c) {
     protectionVariant: val(c, ".ck-protection-variant"),
     protectionSetting: val(c, ".ck-protection-setting"),
     phase: val(c, ".ck-phase") || "single",
+    number: val(c, ".ck-number"),
     name: val(c, ".ck-name"),
     cable: cableFieldValue(c, ".ck-cable", ".ck-cable-custom"),
     cores: val(c, ".ck-cores"),
@@ -1855,7 +1864,7 @@ async function reopenProtocolForEditing() {
 }
 document.addEventListener("input", (e) => {
   if (e.target.closest("#appMain")) {
-    if (e.target.matches(".uv-name,.rcd-name,.ck-name"))
+    if (e.target.matches(".uv-name,.rcd-name,.ck-number,.ck-name"))
       updateStructureLabels();
     evalAll();
     updateCalibrationStatus();
@@ -1923,7 +1932,7 @@ function clearSig() {
 }
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
-    .register("sw.js?v=40", { updateViaCache: "none" })
+    .register("sw.js?v=41", { updateViaCache: "none" })
     .catch(() => {});
 }
 
@@ -2162,13 +2171,16 @@ function compactCheckRows(checkData = {}) {
   }
   return rows;
 }
+function circuitNumber(circuit, fallback) {
+  return String(circuit?.number || "").trim() || fallback;
+}
 function protocolCircuitEntries(d) {
   const entries = [];
   (d.uvs || []).forEach((u, ui) => {
     (u.rcds || []).forEach((r, ri) =>
       (r.circuits || []).forEach((c, ci) =>
         entries.push({
-          number: `${ui + 1}.${ri + 1}.${ci + 1}`,
+          number: circuitNumber(c, `${ui + 1}.${ri + 1}.${ci + 1}`),
           uv: u.name || `UV ${ui + 1}`,
           fi: r.name || `FI ${ri + 1}`,
           rcd: r,
@@ -2179,7 +2191,7 @@ function protocolCircuitEntries(d) {
     );
     (u.direct || []).forEach((c, ci) =>
       entries.push({
-        number: `${ui + 1}.D${ci + 1}`,
+        number: circuitNumber(c, `${ui + 1}.D${ci + 1}`),
         uv: u.name || `UV ${ui + 1}`,
         fi: c.device === "fils" ? "FI/LS integriert" : "—",
         rcd: null,
@@ -2260,7 +2272,7 @@ function preparePrint() {
       rows += `<tr><td colspan="20"><b>FI-Stromkreis ${fiNumber}:</b> ${esc(r.name || "FI " + (ri + 1))} | Typ ${esc(r.type)} | Charakteristik ${esc(r.char)} | In ${esc(r.inn)} | IΔn ${esc(r.idn)} mA | Prüftaste ${yn(r.test)} | <span class="${re.state}">${re.text}</span>${re.msg ? " – " + esc(re.msg) : ""}</td></tr>`;
       rows += measHeader();
       (r.circuits || []).forEach((c, ci) => {
-        const number = `${fiNumber}.${ci + 1}`,
+        const number = circuitNumber(c, `${fiNumber}.${ci + 1}`),
           ce = circuitEvalText(c, true, r, useDetailedInsulation);
         if (ce.state === "bad") bad++;
         else if (ce.state === "warn") warn++;
@@ -2273,7 +2285,7 @@ function preparePrint() {
         `<tr><td colspan="20"><b>Direkte Stromkreise und FI/LS</b></td></tr>` +
         measHeader();
       (u.direct || []).forEach((c, ci) => {
-        const number = `${ui + 1}.D${ci + 1}`,
+        const number = circuitNumber(c, `${ui + 1}.D${ci + 1}`),
           ce = circuitEvalText(
             c,
             c.device === "fils",
@@ -2307,7 +2319,7 @@ function preparePrint() {
       (entry) => entry.c.defect || entry.c.defectPriority,
     ),
     defectsHtml = defects.length
-      ? `<h2>Stromkreisbezogene Mängel</h2><table><thead><tr><th>Nr.</th><th>UV</th><th>Stromkreis</th><th>Priorität</th><th>Feststellung / Maßnahme</th><th>Fotos</th></tr></thead><tbody>${defects.map((entry) => `<tr><td>${entry.number}</td><td>${esc(entry.uv)}</td><td>${esc(entry.c.name || "-")}</td><td>${defectPriorityLabel(entry.c.defectPriority)}</td><td>${esc(entry.c.defect || "-")}</td><td>${(entry.c.defectPhotos || []).length}</td></tr>`).join("")}</tbody></table>`
+      ? `<h2>Stromkreisbezogene Mängel</h2><table><thead><tr><th>Nr.</th><th>UV</th><th>Stromkreis</th><th>Priorität</th><th>Feststellung / Maßnahme</th><th>Fotos</th></tr></thead><tbody>${defects.map((entry) => `<tr><td>${esc(entry.number)}</td><td>${esc(entry.uv)}</td><td>${esc(entry.c.name || "-")}</td><td>${defectPriorityLabel(entry.c.defectPriority)}</td><td>${esc(entry.c.defect || "-")}</td><td>${(entry.c.defectPhotos || []).length}</td></tr>`).join("")}</tbody></table>`
       : "",
     allPhotos = reportPhotos(d);
   const photosHtml = allPhotos.length
@@ -2656,7 +2668,7 @@ async function createPdf() {
         const fiNumber = `${ui + 1}.${ri + 1}`;
         (r.circuits || []).forEach((c, cki) =>
           pdfCircuitRows(
-            `${fiNumber}.${cki + 1}`,
+            circuitNumber(c, `${fiNumber}.${cki + 1}`),
             u,
             r,
             c,
@@ -2670,7 +2682,7 @@ async function createPdf() {
       });
       (u.direct || []).forEach((c, cki) =>
         pdfCircuitRows(
-          `${ui + 1}.D${cki + 1}`,
+          circuitNumber(c, `${ui + 1}.D${cki + 1}`),
           u,
           null,
           c,
@@ -3104,7 +3116,7 @@ function pdfCircuitRows(
     deNumber(c.rcdUl),
     deNumber(c.rcdms),
     deNumber(c.rcdma),
-    pdfSafeText(c.note || ce.msg || "-"),
+    pdfSafeText(c.note || ""),
   ]);
   if (useDetailedInsulation)
     isolationRows.push([
@@ -3133,10 +3145,10 @@ function measHeader() {
 function measRow(uv, fi, c, ce, n, hasUpstreamRcd = false, r = null) {
   const qs = c.cross ? esc(deNumber(c.cross)) + " mm²" : "-";
   const p = protectionLabel(c, hasUpstreamRcd, r);
-  return `<tr><td>${n}</td><td>${esc(uv || "-")}</td><td>${esc(c.name || "-")}</td><td>${esc(c.cable || "-")}</td><td>${esc(c.cores || "-")}</td><td>${qs}</td><td><b>${p.kind}</b></td><td>${p.fi}</td><td>${p.device}</td><td>${esc(deNumber(c.rpe))}</td><td>${esc(deNumber(c.riso))}</td><td>${esc(deNumber(c.zi))}</td><td>${esc(deNumber(c.zs))}</td><td>${esc(deNumber(c.ik))}</td><td>${esc(deNumber(c.rcdUl))}</td><td>${esc(deNumber(c.rcdms))}</td><td>${esc(deNumber(c.rcdma))}</td><td>${esc(c.note || "")}</td><td class="${ce.state}">${ce.text}</td><td>${esc(ce.msg)}</td></tr>`;
+  return `<tr><td>${esc(n)}</td><td>${esc(uv || "-")}</td><td>${esc(c.name || "-")}</td><td>${esc(c.cable || "-")}</td><td>${esc(c.cores || "-")}</td><td>${qs}</td><td><b>${p.kind}</b></td><td>${p.fi}</td><td>${p.device}</td><td>${esc(deNumber(c.rpe))}</td><td>${esc(deNumber(c.riso))}</td><td>${esc(deNumber(c.zi))}</td><td>${esc(deNumber(c.zs))}</td><td>${esc(deNumber(c.ik))}</td><td>${esc(deNumber(c.rcdUl))}</td><td>${esc(deNumber(c.rcdms))}</td><td>${esc(deNumber(c.rcdma))}</td><td>${esc(c.note || "")}</td><td class="${ce.state}">${ce.text}</td><td>${esc(ce.msg)}</td></tr>`;
 }
 function insulationRow(n, c) {
-  return `<tr><td>${n}</td><td>${esc(deNumber(c.risoV))}</td><td>${c.consumer === "ja" ? "Ja" : c.consumer === "nein" ? "Nein" : "-"}</td>${risoKeys.map((key) => `<td>${esc(deNumber(c[key]))}</td>`).join("")}</tr>`;
+  return `<tr><td>${esc(n)}</td><td>${esc(deNumber(c.risoV))}</td><td>${c.consumer === "ja" ? "Ja" : c.consumer === "nein" ? "Nein" : "-"}</td>${risoKeys.map((key) => `<td>${esc(deNumber(c[key]))}</td>`).join("")}</tr>`;
 }
 window.addEventListener("beforeprint", preparePrint);
 
